@@ -3,11 +3,12 @@ from functools import wraps
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import os
+
+load_dotenv(os.path.join(app.instance_path, '.env'))
+
 from models import db, Niveau, Chapitre, Question
 from services import QCMService
-
-# Charger les variables d'environnement
-load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key_for_development')
@@ -294,6 +295,7 @@ def login_ressources():
         mot_de_passe = request.form.get('mot_de_passe')
         se_souvenir = request.form.get('se_souvenir')
 
+        app.logger.debug(f"[DEBUG] RESSOURCES_PASSWORD chargé: '{RESSOURCES_PASSWORD}'")  # À retirer après vérification
         if mot_de_passe == RESSOURCES_PASSWORD:
             session['ressources_access'] = True
 
