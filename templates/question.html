@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Question {{ question_num }}/{{ total_questions }} - {{ niveau|upper }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">Niveau {{ niveau|upper }} - Question {{ question_num }}/{{ total_questions }}</h5>
+            </div>
+            <div class="col-auto">
+                <div class="progress" style="width: 200px; height: 10px;">
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         style="width: {{ (question_num / total_questions * 100)|round }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-5">
+        <div class="mb-4">
+            <h4 class="text-primary mb-3">📝 Problème à résoudre :</h4>
+            <div class="alert alert-light border-start border-primary border-4 fs-5">
+                {{ question.probleme }}
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('repondre') }}">
+            <div class="mb-4">
+                <h5 class="text-secondary mb-3">Choisissez votre réponse :</h5>
+
+                {% for i in range(question.options|length) %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="radio" name="reponse"
+                           id="option{{ i }}" value="{{ i }}" required>
+                    <label class="form-check-label fs-6" for="option{{ i }}">
+                        <span class="badge bg-light text-dark me-2">{{ ['A', 'B', 'C', 'D'][i] }}</span>
+                        {{ question.options[i] }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    ← Retour à l'accueil
+                </a>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    {% if question_num == total_questions %}
+                        Terminer le test →
+                    {% else %}
+                        Question suivante →
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Auto-focus sur le premier choix pour une meilleure UX
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('input[name="reponse"]').focus();
+});
+
+// Permettre la navigation avec les touches numériques
+document.addEventListener('keydown', function(e) {
+    if (e.key >= '1' && e.key <= '4') {
+        const index = parseInt(e.key) - 1;
+        const radio = document.querySelector(`input[name="reponse"][value="${index}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+    }
+});
+</script>
+{% endblock %}

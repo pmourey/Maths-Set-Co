@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Résultats - {{ niveau|upper }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header text-center py-4">
+        {% if pourcentage >= 80 %}
+            <div class="display-4">🏆</div>
+            <h3 class="text-success mb-0">Excellent !</h3>
+        {% elif pourcentage >= 60 %}
+            <div class="display-4">👍</div>
+            <h3 class="text-warning mb-0">Bien joué !</h3>
+        {% else %}
+            <div class="display-4">📚</div>
+            <h3 class="text-info mb-0">À réviser</h3>
+        {% endif %}
+    </div>
+
+    <div class="card-body p-5">
+        <div class="text-center mb-5">
+            <h2 class="mb-3">Votre Score : {{ score }}/{{ total }}</h2>
+            <div class="progress mb-3" style="height: 30px;">
+                <div class="progress-bar {% if pourcentage >= 80 %}bg-success{% elif pourcentage >= 60 %}bg-warning{% else %}bg-info{% endif %}"
+                     role="progressbar" style="width: {{ pourcentage }}%">
+                    <span class="fs-5 fw-bold">{{ pourcentage }}%</span>
+                </div>
+            </div>
+
+            {% if pourcentage >= 80 %}
+                <p class="text-success fs-5">Bravo ! Vous maîtrisez très bien ce niveau !</p>
+            {% elif pourcentage >= 60 %}
+                <p class="text-warning fs-5">Bon travail ! Quelques révisions et ce sera parfait !</p>
+            {% else %}
+                <p class="text-info fs-5">Il faut encore travailler ce niveau. Ne vous découragez pas !</p>
+            {% endif %}
+        </div>
+
+        <h4 class="mb-4">📋 Correction détaillée :</h4>
+
+        {% for reponse in reponses %}
+        <div class="card mb-3 {% if reponse.correcte %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><strong>Question {{ loop.index }}</strong></span>
+                {% if reponse.correcte %}
+                    <span class="badge bg-success">✓ Correct</span>
+                {% else %}
+                    <span class="badge bg-danger">✗ Incorrect</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="mb-3"><strong>Problème :</strong> {{ reponse.question.probleme }}</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Votre réponse :</strong></p>
+                        <p class="{% if reponse.correcte %}text-success{% else %}text-danger{% endif %}">
+                            {{ ['A', 'B', 'C', 'D'][reponse.reponse_utilisateur] }}. {{ reponse.question.options[reponse.reponse_utilisateur] }}
+                        </p>
+                    </div>
+
+                    {% if not reponse.correcte %}
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Bonne réponse :</strong></p>
+                        <p class="text-success">
+                            {{ ['A', 'B', 'C', 'D'][reponse.question.reponse_correcte] }}. {{ reponse.question.options[reponse.question.reponse_correcte] }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3 p-3 bg-light rounded">
+                    <strong>💡 Explication :</strong> {{ reponse.question.explication }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="text-center mt-5">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                🏠 Retour à l'accueil
+            </a>
+            <a href="{{ url_for('choisir_niveau', niveau=niveau) }}" class="btn btn-outline-primary btn-lg">
+                🔄 Refaire ce test
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

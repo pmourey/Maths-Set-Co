@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center p-5">
+        <div class="math-icon mb-4">📐</div>
+        <h1 class="card-title mb-4">Tests de Mathématiques</h1>
+        <p class="lead mb-5">Choisissez votre niveau de collège pour commencer le test</p>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">6ème</h5>
+                        <p class="card-text">Fractions, périmètres, calculs simples</p>
+                        <a href="{{ url_for('choisir_niveau', niveau='6eme') }}" class="btn btn-primary">Commencer</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">5ème</h5>
+                        <p class="card-text">Équations simples, géométrie</p>
+                        <a href="{{ url_for('choisir_niveau', niveau='5eme') }}" class="btn btn-primary">Commencer</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">4ème</h5>
+                        <p class="card-text">Nombres relatifs, volumes</p>
+                        <a href="{{ url_for('choisir_niveau', niveau='4eme') }}" class="btn btn-primary">Commencer</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">3ème</h5>
+                        <p class="card-text">Systèmes d'équations, théorème de Pythagore</p>
+                        <a href="{{ url_for('choisir_niveau', niveau='3eme') }}" class="btn btn-primary">Commencer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <small class="text-muted">
+                ✓ Questions adaptées au niveau collège<br>
+                ✓ Corrections détaillées<br>
+                ✓ Score instantané
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
