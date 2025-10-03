@@ -1,5 +1,9 @@
 # Site de Tests de Mathématiques - Collège
 
+**MathπSet🎾&Co**
+
+- Démo en ligne : [https://mathsetco.eu.pythonanywhere.com/](https://mathsetco.eu.pythonanywhere.com/)
+
 Une application Flask simple pour proposer des tests de mathématiques en ligne sous forme de QCM pour les niveaux collège (6ème à 3ème).
 
 ## Fonctionnalités
@@ -53,6 +57,7 @@ E-Learning/
 2. Répondre aux questions du QCM
 3. Consulter les résultats et corrections détaillées
 4. Possibilité de refaire le test ou changer de niveau
+5. Démo publique disponible ici : [https://mathsetco.eu.pythonanywhere.com/](https://mathsetco.eu.pythonanywhere.com/)
 
 ## Personnalisation
 
