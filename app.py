@@ -247,8 +247,11 @@ def consulter_pdf_5eme():
 @login_required
 def telecharger_pdf_5eme():
     """Télécharge le PDF Maths 5ème"""
+    import os
     chemin_pdf = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'Maths 5ème.pdf'))
+    app.logger.debug(f"[DEBUG] Chemin absolu PDF 5ème : {chemin_pdf}")  # Log pour diagnostic
     if not os.path.exists(chemin_pdf):
+        app.logger.debug("[ERROR] Fichier PDF introuvable !")
         return "Fichier PDF introuvable.", 404
     return send_file(chemin_pdf, as_attachment=True, download_name='Maths_5eme.pdf')
 
