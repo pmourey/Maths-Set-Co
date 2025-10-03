@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+
+{% block title %}Administration QCM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#questions" data-bs-toggle="tab">
+                            📝 Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#statistiques" data-bs-toggle="tab">
+                            📊 Statistiques
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#export" data-bs-toggle="tab">
+                            📤 Export/Import
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">🛠️ Administration QCM</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#ajouterQuestionModal">
+                        ➕ Ajouter une question
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <!-- Onglet Questions -->
+                <div class="tab-pane fade show active" id="questions">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <select class="form-select" id="filtreNiveau" onchange="filtrerQuestions()">
+                                <option value="">Tous les niveaux</option>
+                                <option value="6eme">6ème</option>
+                                <option value="5eme">5ème</option>
+                                <option value="4eme">4ème</option>
+                                <option value="3eme">3ème</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select" id="filtreChapitre" onchange="filtrerQuestions()">
+                                <option value="">Tous les chapitres</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="tableQuestions">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Problème</th>
+                                    <th>Niveau</th>
+                                    <th>Chapitre</th>
+                                    <th>Difficulté</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Chargement dynamique via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Onglet Statistiques -->
+                <div class="tab-pane fade" id="statistiques">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>📊 Répartition par niveau</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="chartNiveau"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>🎯 Répartition par difficulté</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="chartDifficulte"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onglet Export/Import -->
+                <div class="tab-pane fade" id="export">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>📤 Exporter les données</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Exporter toutes les questions au format JSON</p>
+                                    <button class="btn btn-primary" onclick="exporterDonnees()">
+                                        📥 Télécharger JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>📥 Importer des données</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="importForm" enctype="multipart/form-data">
+                                        <div class="mb-3">
+                                            <input type="file" class="form-control" id="fichierImport" accept=".json">
+                                        </div>
+                                        <button type="submit" class="btn btn-warning">
+                                            📤 Importer JSON
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Question -->
+<div class="modal fade" id="ajouterQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Ajouter une nouvelle question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAjouterQuestion">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Niveau</label>
+                                <select class="form-select" name="niveau" required>
+                                    <option value="6eme">6ème</option>
+                                    <option value="5eme">5ème</option>
+                                    <option value="4eme">4ème</option>
+                                    <option value="3eme">3ème</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Chapitre</label>
+                                <select class="form-select" name="chapitre" required>
+                                    <!-- Chargement dynamique -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Difficulté</label>
+                        <select class="form-select" name="difficulte" required>
+                            <option value="facile">Facile</option>
+                            <option value="moyen">Moyen</option>
+                            <option value="difficile">Difficile</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Problème</label>
+                        <textarea class="form-control" name="probleme" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option A</label>
+                                <input type="text" class="form-control" name="option_a" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option B</label>
+                                <input type="text" class="form-control" name="option_b" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option C</label>
+                                <input type="text" class="form-control" name="option_c" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option D</label>
+                                <input type="text" class="form-control" name="option_d" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Réponse correcte</label>
+                        <select class="form-select" name="reponse_correcte" required>
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Explication</label>
+                        <textarea class="form-control" name="explication" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">✅ Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Éditer Question -->
+<div class="modal fade" id="editerQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Modifier la question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditerQuestion">
+                <input type="hidden" name="question_id" id="edit_question_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Niveau</label>
+                                <select class="form-select" name="niveau" id="edit_niveau" required>
+                                    <option value="6eme">6ème</option>
+                                    <option value="5eme">5ème</option>
+                                    <option value="4eme">4ème</option>
+                                    <option value="3eme">3ème</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Chapitre</label>
+                                <select class="form-select" name="chapitre" id="edit_chapitre" required>
+                                    <!-- Chargement dynamique -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Difficulté</label>
+                        <select class="form-select" name="difficulte" id="edit_difficulte" required>
+                            <option value="facile">Facile</option>
+                            <option value="moyen">Moyen</option>
+                            <option value="difficile">Difficile</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Problème</label>
+                        <textarea class="form-control" name="probleme" id="edit_probleme" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option A</label>
+                                <input type="text" class="form-control" name="option_a" id="edit_option_a" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option B</label>
+                                <input type="text" class="form-control" name="option_b" id="edit_option_b" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option C</label>
+                                <input type="text" class="form-control" name="option_c" id="edit_option_c" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Option D</label>
+                                <input type="text" class="form-control" name="option_d" id="edit_option_d" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Réponse correcte</label>
+                        <select class="form-select" name="reponse_correcte" id="edit_reponse_correcte" required>
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Explication</label>
+                        <textarea class="form-control" name="explication" id="edit_explication" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">✅ Modifier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript pour l'administration
+document.addEventListener('DOMContentLoaded', function() {
+    chargerQuestions();
+    chargerStatistiques();
+    initialiserFormulaire();
+});
+
+function initialiserFormulaire() {
+    // Chargement initial des chapitres pour le niveau par défaut (6ème)
+    const selectNiveau = document.querySelector('#ajouterQuestionModal select[name="niveau"]');
+    const selectChapitre = document.querySelector('#ajouterQuestionModal select[name="chapitre"]');
+
+    // Événement pour le changement de niveau
+    selectNiveau.addEventListener('change', function() {
+        const niveau = this.value;
+        chargerChapitres(niveau, selectChapitre);
+    });
+
+    // Charger les chapitres pour le niveau par défaut
+    if (selectNiveau.value) {
+        chargerChapitres(selectNiveau.value, selectChapitre);
+    }
+
+    // Gestionnaire de soumission du formulaire
+    const formAjouter = document.getElementById('formAjouterQuestion');
+    formAjouter.addEventListener('submit', function(e) {
+        e.preventDefault();
+        ajouterQuestion();
+    });
+
+    // Initialiser les filtres de la liste principale
+    initialiserFiltres();
+
+    // Initialiser le formulaire d'édition
+    initialiserFormulaireEdition();
+}
+
+function initialiserFormulaireEdition() {
+    // Gérer le changement de niveau dans le modal d'édition
+    const editNiveau = document.getElementById('edit_niveau');
+    const editChapitre = document.getElementById('edit_chapitre');
+
+    editNiveau.addEventListener('change', function() {
+        const niveau = this.value;
+        chargerChapitres(niveau, editChapitre);
+    });
+
+    // Gestionnaire de soumission du formulaire d'édition
+    const formEditer = document.getElementById('formEditerQuestion');
+    formEditer.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sauvegarderModifications();
+    });
+}
+
+function initialiserFiltres() {
+    // Gérer le changement de niveau dans les filtres
+    const filtreNiveau = document.getElementById('filtreNiveau');
+    const filtreChapitre = document.getElementById('filtreChapitre');
+
+    filtreNiveau.addEventListener('change', function() {
+        const niveau = this.value;
+
+        if (niveau) {
+            // Charger les chapitres pour ce niveau
+            chargerChapitresPourFiltre(niveau, filtreChapitre);
+        } else {
+            // Remettre "Tous les chapitres" si aucun niveau sélectionné
+            filtreChapitre.innerHTML = '<option value="">Tous les chapitres</option>';
+        }
+
+        // Recharger les questions avec les nouveaux filtres
+        filtrerQuestions();
+    });
+}
+
+function chargerChapitresPourFiltre(niveau, selectElement) {
+    // Sauvegarder la valeur actuelle
+    const valeurActuelle = selectElement.value;
+
+    // Vider et afficher le chargement
+    selectElement.innerHTML = '<option value="">Chargement...</option>';
+
+    fetch(`/admin/api/chapitres/${niveau}`)
+        .then(response => response.json())
+        .then(data => {
+            selectElement.innerHTML = '<option value="">Tous les chapitres</option>';
+
+            if (data.chapitres && data.chapitres.length > 0) {
+                data.chapitres.forEach(chapitre => {
+                    const option = document.createElement('option');
+                    option.value = chapitre.nom;
+                    option.textContent = chapitre.titre;
+                    selectElement.appendChild(option);
+                });
+
+                // Restaurer la valeur si elle existe encore
+                if (valeurActuelle && [...selectElement.options].some(opt => opt.value === valeurActuelle)) {
+                    selectElement.value = valeurActuelle;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des chapitres:', error);
+            selectElement.innerHTML = '<option value="">Tous les chapitres</option>';
+        });
+}
+
+function chargerChapitres(niveau, selectElement) {
+    // Vider la liste des chapitres
+    selectElement.innerHTML = '<option value="">Chargement...</option>';
+
+    return fetch(`/admin/api/chapitres/${niveau}`)
+        .then(response => response.json())
+        .then(data => {
+            selectElement.innerHTML = '';
+
+            if (data.chapitres && data.chapitres.length > 0) {
+                data.chapitres.forEach(chapitre => {
+                    const option = document.createElement('option');
+                    option.value = chapitre.nom;
+                    option.textContent = chapitre.titre;
+                    selectElement.appendChild(option);
+                });
+                return Promise.resolve(); // Retourner une Promise résolue
+            } else {
+                selectElement.innerHTML = '<option value="">Aucun chapitre disponible</option>';
+                return Promise.resolve();
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des chapitres:', error);
+            selectElement.innerHTML = '<option value="">Erreur de chargement</option>';
+            return Promise.reject(error);
+        });
+}
+
+function ajouterQuestion() {
+    const form = document.getElementById('formAjouterQuestion');
+    const formData = new FormData(form);
+
+    // Convertir en objet JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    fetch('/admin/api/question', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fermer le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('ajouterQuestionModal'));
+            modal.hide();
+
+            // Réinitialiser le formulaire
+            form.reset();
+
+            // Recharger la liste des questions
+            chargerQuestions();
+
+            // Afficher un message de succès
+            alert('Question ajoutée avec succès !');
+        } else {
+            alert('Erreur : ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'ajout de la question');
+    });
+}
+
+function chargerQuestions() {
+    const filtreNiveau = document.getElementById('filtreNiveau')?.value || '';
+    const filtreChapitre = document.getElementById('filtreChapitre')?.value || '';
+
+    let url = '/admin/api/questions';
+    const params = new URLSearchParams();
+
+    if (filtreNiveau) params.append('niveau', filtreNiveau);
+    if (filtreChapitre) params.append('chapitre', filtreChapitre);
+
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#tableQuestions tbody');
+            tbody.innerHTML = '';
+
+            if (data.questions) {
+                data.questions.forEach(question => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${question.id}</td>
+                        <td>${question.probleme.substring(0, 50)}...</td>
+                        <td><span class="badge bg-primary">${question.niveau_nom.toUpperCase()}</span></td>
+                        <td>${question.chapitre_titre}</td>
+                        <td><span class="badge bg-${getDifficultyColor(question.difficulte)}">${question.difficulte}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="modifierQuestion(${question.id})">✏️</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="supprimerQuestion(${question.id})">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des questions:', error);
+        });
+}
+
+function filtrerQuestions() {
+    chargerQuestions();
+}
+
+function getDifficultyColor(difficulte) {
+    switch(difficulte) {
+        case 'facile': return 'success';
+        case 'moyen': return 'warning';
+        case 'difficile': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function modifierQuestion(id) {
+    // Charger les détails de la question dans le formulaire d'édition
+    fetch(`/admin/api/question/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.question) {
+                const question = data.question;
+
+                // Remplir le formulaire avec les données de la question
+                document.getElementById('edit_question_id').value = question.id;
+                document.getElementById('edit_probleme').value = question.probleme;
+                document.getElementById('edit_option_a').value = question.options[0];
+                document.getElementById('edit_option_b').value = question.options[1];
+                document.getElementById('edit_option_c').value = question.options[2];
+                document.getElementById('edit_option_d').value = question.options[3];
+                document.getElementById('edit_reponse_correcte').value = question.reponse_correcte;
+                document.getElementById('edit_explication').value = question.explication;
+
+                // Définir les sélections pour le niveau et la difficulté
+                document.getElementById('edit_niveau').value = question.niveau;
+                document.getElementById('edit_difficulte').value = question.difficulte;
+
+                // Charger les chapitres associés au niveau de la question
+                const editChapitre = document.getElementById('edit_chapitre');
+                chargerChapitres(question.niveau, editChapitre).then(() => {
+                    // Sélectionner le chapitre correct après le chargement
+                    editChapitre.value = question.chapitre;
+                });
+
+                // Afficher le modal d'édition
+                const modal = new bootstrap.Modal(document.getElementById('editerQuestionModal'));
+                modal.show();
+            } else {
+                alert('Question non trouvée');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement de la question:', error);
+            alert('Erreur lors du chargement des détails de la question');
+        });
+}
+
+function sauvegarderModifications() {
+    const form = document.getElementById('formEditerQuestion');
+    const formData = new FormData(form);
+
+    // Convertir en objet JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    fetch('/admin/api/question/' + data.question_id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fermer le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editerQuestionModal'));
+            modal.hide();
+
+            // Recharger la liste des questions
+            chargerQuestions();
+
+            // Afficher un message de succès
+            alert('Modifications enregistrées avec succès !');
+        } else {
+            alert('Erreur : ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'enregistrement des modifications');
+    });
+}
+
+function supprimerQuestion(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+        fetch(`/admin/api/question/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                chargerQuestions();
+                alert('Question supprimée avec succès');
+            } else {
+                alert('Erreur : ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
+        });
+    }
+}
+
+function chargerStatistiques() {
+    fetch('/admin/api/statistiques')
+        .then(response => response.json())
+        .then(data => {
+            // TODO: Créer les graphiques avec Chart.js
+            console.log('Statistiques chargées:', data);
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des statistiques:', error);
+        });
+}
+
+function exporterDonnees() {
+    // TODO: Implémenter l'export
+    alert('Fonctionnalité d\'export à implémenter');
+}
+</script>
+{% endblock %}

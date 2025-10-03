@@ -77,12 +77,21 @@
         {% endfor %}
 
         <div class="text-center mt-5">
+            {% if type_test == 'chapitre' %}
+            <a href="{{ url_for('chapitres_niveau', niveau=niveau) }}" class="btn btn-primary btn-lg me-3">
+                ← Retour aux chapitres {{ niveau|upper }}
+            </a>
+            <a href="{{ url_for('choisir_chapitre_niveau', niveau=niveau, chapitre=session.get('chapitre')) }}" class="btn btn-outline-primary btn-lg">
+                🔄 Refaire ce chapitre
+            </a>
+            {% else %}
             <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
                 🏠 Retour à l'accueil
             </a>
             <a href="{{ url_for('choisir_niveau', niveau=niveau) }}" class="btn btn-outline-primary btn-lg">
                 🔄 Refaire ce test
             </a>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titre_niveau if titre_niveau else 'Chapitres' }} - Tests de Mathématiques{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center p-5">
+        <div class="math-icon mb-4">📚</div>
+        <h1 class="card-title mb-4">{{ titre_niveau if titre_niveau else 'Tests par Chapitre' }}</h1>
+        <p class="lead mb-4">Choisissez un chapitre spécifique pour vous entraîner</p>
+
+        <!-- Navigation par niveau -->
+        {% if not niveau %}
+        <div class="mb-5">
+            <h3 class="mb-3">Sélectionnez votre niveau :</h3>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <a href="{{ url_for('chapitres_niveau', niveau='6eme') }}" class="btn btn-primary btn-lg w-100">
+                        🎯 6ème
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('chapitres_niveau', niveau='5eme') }}" class="btn btn-success btn-lg w-100">
+                        🎯 5ème
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('chapitres_niveau', niveau='4eme') }}" class="btn btn-warning btn-lg w-100">
+                        🎯 4ème
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('chapitres_niveau', niveau='3eme') }}" class="btn btn-danger btn-lg w-100">
+                        🎯 3ème
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Onglets de navigation entre niveaux -->
+        <div class="mb-4">
+            <nav class="nav nav-pills nav-justified">
+                <a class="nav-link {% if niveau == '6eme' %}active{% endif %}"
+                   href="{{ url_for('chapitres_niveau', niveau='6eme') }}">
+                    📘 6ème
+                </a>
+                <a class="nav-link {% if niveau == '5eme' %}active{% endif %}"
+                   href="{{ url_for('chapitres_niveau', niveau='5eme') }}">
+                    📗 5ème
+                </a>
+                <a class="nav-link {% if niveau == '4eme' %}active{% endif %}"
+                   href="{{ url_for('chapitres_niveau', niveau='4eme') }}">
+                    📙 4ème
+                </a>
+                <a class="nav-link {% if niveau == '3eme' %}active{% endif %}"
+                   href="{{ url_for('chapitres_niveau', niveau='3eme') }}">
+                    📕 3ème
+                </a>
+            </nav>
+        </div>
+
+        <!-- Chapitres du niveau sélectionné -->
+        <div class="row g-3">
+            {% for chapitre_id, info in chapitres.items() %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-{% if niveau == '6eme' %}primary{% elif niveau == '5eme' %}success{% elif niveau == '4eme' %}warning{% else %}danger{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ info.titre }}</h5>
+                        <p class="card-text">{{ info.description }}</p>
+                        <div class="mb-2">
+                            <span class="badge bg-{% if niveau == '6eme' %}primary{% elif niveau == '5eme' %}success{% elif niveau == '4eme' %}warning{% else %}danger{% endif %}">
+                                {{ info.nb_questions }} question{{ 's' if info.nb_questions > 1 else '' }}
+                            </span>
+                        </div>
+                        <small class="text-muted">Pages {{ info.pages }}</small>
+                        <div class="mt-3">
+                            <a href="{{ url_for('choisir_chapitre_niveau', niveau=niveau, chapitre=chapitre_id) }}"
+                               class="btn btn-{% if niveau == '6eme' %}primary{% elif niveau == '5eme' %}success{% elif niveau == '4eme' %}warning{% else %}danger{% endif %}">
+                                📖 Commencer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <small class="text-muted">
+                ✓ Questions basées sur le programme officiel {{ niveau.upper() if niveau else '' }}<br>
+                ✓ Tests ciblés par chapitre<br>
+                ✓ Corrections détaillées avec explications
+            </small>
+        </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg me-3">
+                🏠 Retour à l'accueil
+            </a>
+            {% if niveau %}
+            <a href="{{ url_for('choisir_niveau', niveau=niveau) }}" class="btn btn-outline-success btn-lg me-3">
+                🎯 Test complet {{ niveau.upper() }}
+            </a>
+            {% endif %}
+            <a href="{{ url_for('login_ressources') }}" class="btn btn-outline-secondary btn-lg">
+                📄 Consulter les ressources
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -44,9 +44,15 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center">
+                {% if session.get('mode') == 'chapitre' %}
+                <a href="{{ url_for('chapitres_niveau', niveau=niveau) }}" class="btn btn-outline-secondary">
+                    ← Retour aux chapitres {{ niveau|upper }}
+                </a>
+                {% else %}
                 <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
                     ← Retour à l'accueil
                 </a>
+                {% endif %}
 
                 <button type="submit" class="btn btn-primary btn-lg">
                     {% if question_num == total_questions %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - Accès aux Ressources{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-5">
+        <h1 class="card-title text-center mb-4">🔐 Accès aux Ressources</h1>
+        <p class="lead text-center mb-5">Veuillez saisir le mot de passe pour accéder aux documents pédagogiques</p>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="mot_de_passe" class="form-label">
+                            <i class="bi bi-key"></i> Mot de passe :
+                        </label>
+                        <input type="password"
+                               class="form-control form-control-lg"
+                               id="mot_de_passe"
+                               name="mot_de_passe"
+                               placeholder="Saisissez le mot de passe"
+                               required
+                               autocomplete="current-password">
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="se_souvenir"
+                                   name="se_souvenir"
+                                   value="1">
+                            <label class="form-check-label" for="se_souvenir">
+                                🔒 Se souvenir de moi (30 jours)
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Vous n'aurez pas à ressaisir le mot de passe pendant 30 jours
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            🚪 Se connecter
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        💡 Contactez l'administrateur pour obtenir le mot de passe d'accès aux ressources.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                ← Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}
