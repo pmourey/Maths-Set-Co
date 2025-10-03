@@ -171,5 +171,9 @@ def sitemap():
 def robots():
     return send_from_directory('.', 'robots.txt')
 
+@app.route('/google075dc122689af97b.html')
+def google_verification():
+    return send_from_directory('.', 'google075dc122689af97b.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
