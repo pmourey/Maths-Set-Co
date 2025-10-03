@@ -5,14 +5,15 @@ import os
 from dotenv import load_dotenv
 import os
 
-load_dotenv(os.path.join(app.instance_path, '.env'))
 
 from models import db, Niveau, Chapitre, Question
 from services import QCMService
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key_for_development')
 
+load_dotenv(os.path.join(app.instance_path, '.env'))
+# Clé secrète pour les sessions (chargée depuis .env)
+app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key_for_development')
 # Configuration SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///qcm_database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
