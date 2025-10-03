@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://mathsetco.eu.pythonanywhere.com/sitemap.xml
+

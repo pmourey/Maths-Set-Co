@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 
 app = Flask(__name__)
 app.secret_key = 'votre_cle_secrete_ici'
@@ -162,6 +162,14 @@ def resultats():
 def recommencer():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory('.', 'sitemap.xml')
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory('.', 'robots.txt')
 
 if __name__ == '__main__':
     app.run(debug=True)
