@@ -9,7 +9,7 @@ import os
 from models import db, Niveau, Chapitre, Question
 from services import QCMService
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 load_dotenv(os.path.join(app.instance_path, '.env'))
 # Clé secrète pour les sessions (chargée depuis .env)
