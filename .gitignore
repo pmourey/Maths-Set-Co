@@ -1,5 +1,5 @@
 # Fichiers de configuration sensibles - Ne jamais commiter !
-.env
+instance/.env
 Migration_SQLAlchemy.md
 migration_sqlalchemy.py
 
