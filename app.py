@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, send_file
 from functools import wraps
 from datetime import timedelta
+import os
 from dotenv import load_dotenv
 from models import db, Niveau, Chapitre, Question
 from services import QCMService
