@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, send_file
 from functools import wraps
 from datetime import timedelta
-import os
 from dotenv import load_dotenv
 import os
-
 
 from models import db, Niveau, Chapitre, Question
 from services import QCMService
@@ -229,19 +227,19 @@ def google_verification():
 @login_required
 def consulter_pdf_6eme():
     """Affiche le PDF Maths 6ème dans le navigateur"""
-    return send_from_directory('static', 'Maths 6ème.pdf')
+    return send_from_directory('static', 'Maths_6eme.pdf')
 
 @app.route('/telecharger/maths-6eme')
 @login_required
 def telecharger_pdf_6eme():
     """Télécharge le PDF Maths 6ème"""
-    return send_file('static/Maths 6ème.pdf', as_attachment=True, download_name='Maths_6eme.pdf')
+    return send_file('static/Maths_6eme.pdf', as_attachment=True, download_name='Maths_6eme.pdf')
 
 @app.route('/pdf/maths-5eme')
 @login_required
 def consulter_pdf_5eme():
     """Affiche le PDF Maths 5ème dans le navigateur"""
-    return send_from_directory('static', 'Maths 5ème.pdf')
+    return send_from_directory('static', 'Maths_5eme.pdf')
 
 @app.route('/telecharger/maths-5eme')
 @login_required
@@ -253,31 +251,31 @@ def telecharger_pdf_5eme():
     if not os.path.exists(chemin_pdf):
         app.logger.debug("[ERROR] Fichier PDF introuvable !")
         return "Fichier PDF introuvable.", 404
-    return send_file(chemin_pdf, as_attachment=True, download_name='Maths_5eme.pdf')
+    return send_file(chemin_pdf, as_attachment=True, download_name='c.pdf')
 
 @app.route('/pdf/maths-4eme')
 @login_required
 def consulter_pdf_4eme():
     """Affiche le PDF Maths 4ème dans le navigateur"""
-    return send_from_directory('static', 'Maths 4ème.pdf')
+    return send_from_directory('static', 'Maths_4eme.pdf')
 
 @app.route('/telecharger/maths-4eme')
 @login_required
 def telecharger_pdf_4eme():
     """Télécharge le PDF Maths 4ème"""
-    return send_file('static/Maths 4ème.pdf', as_attachment=True, download_name='Maths_4eme.pdf')
+    return send_file('static/Maths_4eme.pdf', as_attachment=True, download_name='Maths_4eme.pdf')
 
 @app.route('/pdf/maths-3eme')
 @login_required
 def consulter_pdf_3eme():
     """Affiche le PDF Maths 3ème dans le navigateur"""
-    return send_from_directory('static', 'Maths 3ème.pdf')
+    return send_from_directory('static', 'Maths_3eme.pdf')
 
 @app.route('/telecharger/maths-3eme')
 @login_required
 def telecharger_pdf_3eme():
     """Télécharge le PDF Maths 3ème"""
-    return send_file('static/Maths 3ème.pdf', as_attachment=True, download_name='Maths_3eme.pdf')
+    return send_file('static/Maths_3eme.pdf', as_attachment=True, download_name='Maths_3eme.pdf')
 
 @app.route('/ressources')
 @login_required
