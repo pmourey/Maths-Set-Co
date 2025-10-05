@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Éditer une question à trous{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2>Éditer une question à trous</h2>
+    <form method="post" action="{{ url_for('edit_question_trous', question_id=question.id) }}">
+        <div class="mb-3">
+            <label for="niveau_id" class="form-label">Niveau</label>
+            <select class="form-select" id="niveau_id" name="niveau_id" required>
+                {% for niveau in niveaux %}
+                <option value="{{ niveau.id }}" {% if question.chapitre and question.chapitre.niveau_id == niveau.id %}selected{% endif %}>{{ niveau.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="chapitre_id" class="form-label">Chapitre</label>
+            <select class="form-select" id="chapitre_id" name="chapitre_id" required>
+                {% for chapitre in chapitres %}
+                <option value="{{ chapitre.id }}" {% if question.chapitre_id == chapitre.id %}selected{% endif %}>{{ chapitre.titre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="probleme" class="form-label">Énoncé du problème</label>
+            <div class="input-group">
+                <textarea class="form-control" id="probleme" name="probleme" rows="3" required>{{ question.probleme }}</textarea>
+                <button type="button" class="btn btn-secondary" id="btnTROU">&lt;TROU&gt;</button>
+            </div>
+            <div class="form-text">Utilisez le bouton <strong>&lt;TROU&gt;</strong> pour insérer un trou à l'emplacement du curseur.</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Texte attendu et distracteurs pour chaque trou</label>
+            <div id="resultsZones">
+                <!-- Zones générées dynamiquement -->
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="difficulte" class="form-label">Difficulté</label>
+            <select class="form-select" id="difficulte" name="difficulte" required>
+                <option value="facile" {% if question.difficulte == 'facile' %}selected{% endif %}>Facile</option>
+                <option value="moyen" {% if question.difficulte == 'moyen' %}selected{% endif %}>Moyen</option>
+                <option value="difficile" {% if question.difficulte == 'difficile' %}selected{% endif %}>Difficile</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </form>
+</div>
+<script>
+const niveauSelect = document.getElementById('niveau_id');
+const chapitreSelect = document.getElementById('chapitre_id');
+niveauSelect.addEventListener('change', function() {
+    fetch(`/admin/api/chapitres/${niveauSelect.options[niveauSelect.selectedIndex].text}`)
+        .then(response => response.json())
+        .then(data => {
+            chapitreSelect.innerHTML = '';
+            data.chapitres.forEach(chapitre => {
+                const option = document.createElement('option');
+                option.value = chapitre.id;
+                option.textContent = chapitre.titre;
+                chapitreSelect.appendChild(option);
+            });
+        });
+});
+const btnTROU = document.getElementById('btnTROU');
+const probleme = document.getElementById('probleme');
+btnTROU.addEventListener('click', function() {
+    const start = probleme.selectionStart;
+    const end = probleme.selectionEnd;
+    const value = probleme.value;
+    probleme.value = value.substring(0, start) + '[TROU]' + value.substring(end);
+    probleme.focus();
+    probleme.selectionStart = probleme.selectionEnd = start + 6;
+    updateResultsZones();
+});
+function updateResultsZones() {
+    const enonce = probleme.value;
+    const nbTrous = (enonce.match(/\[TROU\]/g) || []).length;
+    const resultsDiv = document.getElementById('resultsZones');
+    resultsDiv.innerHTML = '';
+    let existingResults = [];
+    let existingDistracteurs = [];
+    {% if question %}
+    existingResults = {{ question.results_list|tojson }};
+    existingDistracteurs = {{ question.distracteurs_list|tojson }};
+    {% endif %}
+    for (let i = 0; i < nbTrous; i++) {
+        const label = document.createElement('label');
+        label.textContent = 'Réponse correcte pour le trou ' + (i+1);
+        label.className = 'form-label';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control mb-2';
+        input.name = 'result_' + i;
+        input.required = true;
+        input.value = existingResults[i] || '';
+        resultsDiv.appendChild(label);
+        resultsDiv.appendChild(input);
+        // Distracteurs
+        const distractLabel = document.createElement('label');
+        distractLabel.textContent = 'Distracteurs pour le trou ' + (i+1) + ' (séparés par des virgules)';
+        distractLabel.className = 'form-label';
+        const distractInput = document.createElement('input');
+        distractInput.type = 'text';
+        distractInput.className = 'form-control mb-2';
+        distractInput.name = 'distracteurs_' + i;
+        distractInput.value = (existingDistracteurs[i] ? existingDistracteurs[i].join(', ') : '');
+        resultsDiv.appendChild(distractLabel);
+        resultsDiv.appendChild(distractInput);
+    }
+}
+probleme.addEventListener('input', updateResultsZones);
+document.addEventListener('DOMContentLoaded', updateResultsZones);
+</script>
+{% endblock %}
+

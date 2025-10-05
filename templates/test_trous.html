@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center p-5">
+        <div class="math-icon mb-4">📝</div>
+        <h1 class="card-title mb-4">Tests à trous par niveau</h1>
+        <p class="lead mb-5">Choisissez votre niveau pour commencer un test à trous</p>
+        <div class="row g-3">
+            {% for niveau in ['6eme', '5eme', '4eme', '3eme'] %}
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ niveau|capitalize }}</h5>
+                        <p class="card-text">Test à trous pour la classe de {{ niveau|capitalize }}</p>
+                        {% if questions_par_niveau[niveau] %}
+                        <a href="{{ url_for('lancer_test_trous', niveau=niveau) }}" class="btn btn-primary">Commencer</a>
+                        {% else %}
+                        <span class="btn btn-secondary disabled">Aucune question disponible</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Question à trous{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Complétez la phrase en glissant les mots dans les trous :</h2>
+        <button type="button" class="btn btn-light border" onclick="confirmerRetourAccueil()">
+            🏠 Retour à l'accueil
+        </button>
+    </div>
+    <form id="formTrous" method="post" action="{{ url_for('lancer_test_trous', niveau=niveau) }}">
+        <div id="enonce" class="mb-5"></div>
+        <div class="mb-4">
+            <h5>Mots à choisir :</h5>
+            <div id="rangements" class="d-flex gap-3 flex-wrap">
+                {% for mot in choix_mots %}
+                <div class="rangement">
+                    <span class="mot badge bg-primary" draggable="true" data-mot="{{ mot }}">{{ mot }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if index < total %}
+        <button type="submit" class="btn btn-primary">Question suivante</button>
+        {% else %}
+        <button type="submit" class="btn btn-success">Terminer le test</button>
+        {% endif %}
+    </form>
+    <div id="resultat" class="mt-4"></div>
+</div>
+<script>
+// Génération dynamique des trous à partir de l'énoncé
+const rawEnonce = {{ question.probleme|tojson }};
+const enonceDiv = document.getElementById('enonce');
+let trouIndex = 0;
+const parts = rawEnonce.split('[TROU]');
+parts.forEach((part, idx) => {
+    enonceDiv.append(document.createTextNode(part));
+    if (idx < parts.length - 1) {
+        const trou = document.createElement('span');
+        trou.className = 'trou dropzone';
+        trou.setAttribute('data-index', trouIndex);
+        trouIndex++;
+        enonceDiv.append(trou);
+    }
+});
+// Drag & Drop JS (identique à test_trous.html, adapté)
+const rangements = document.querySelectorAll('.rangement');
+const trous = document.querySelectorAll('.trou');
+let motEnCours = null;
+function initDraggableMots() {
+    document.querySelectorAll('.mot').forEach(mot => {
+        mot.setAttribute('draggable', 'true');
+        mot.addEventListener('dragstart', e => {
+            motEnCours = mot;
+            e.dataTransfer.setData('text/plain', mot.dataset.mot);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+    });
+}
+initDraggableMots();
+trous.forEach(trou => {
+    trou.addEventListener('dragover', e => {
+        e.preventDefault();
+        trou.classList.add('bg-light');
+    });
+    trou.addEventListener('dragleave', e => {
+        trou.classList.remove('bg-light');
+    });
+    trou.addEventListener('drop', e => {
+        e.preventDefault();
+        trou.classList.remove('bg-light');
+        if (trou.firstChild) {
+            const motRemplace = trou.firstChild;
+            const rangementVide = Array.from(document.querySelectorAll('.rangement')).find(r => r.children.length === 0);
+            if (rangementVide) {
+                rangementVide.appendChild(motRemplace);
+            } else {
+                trou.removeChild(motRemplace);
+            }
+            trou.classList.remove('bg-info');
+        }
+        if (motEnCours) {
+            const span = document.createElement('span');
+            span.className = 'mot badge bg-primary';
+            span.setAttribute('draggable', 'true');
+            span.setAttribute('data-mot', motEnCours.dataset.mot);
+            span.textContent = motEnCours.textContent;
+            trou.appendChild(span);
+            trou.classList.add('bg-info');
+            if (motEnCours.parentNode) motEnCours.parentNode.removeChild(motEnCours);
+            initDraggableMots();
+            motEnCours = null;
+        }
+    });
+});
+rangements.forEach(rangement => {
+    rangement.addEventListener('dragover', e => {
+        e.preventDefault();
+        rangement.classList.add('bg-light');
+    });
+    rangement.addEventListener('dragleave', e => {
+        rangement.classList.remove('bg-light');
+    });
+    rangement.addEventListener('drop', e => {
+        e.preventDefault();
+        rangement.classList.remove('bg-light');
+        if (rangement.children.length === 0 && motEnCours) {
+            trous.forEach(trou => {
+                if (trou.firstChild && trou.firstChild.dataset.mot === motEnCours.dataset.mot) {
+                    trou.removeChild(trou.firstChild);
+                    trou.classList.remove('bg-info');
+                }
+            });
+            rangement.appendChild(motEnCours);
+            initDraggableMots();
+            motEnCours = null;
+        }
+    });
+});
+trous.forEach(trou => {
+    trou.addEventListener('dragstart', e => {
+        if (trou.firstChild && e.target.classList.contains('mot')) {
+            motEnCours = e.target;
+            e.dataTransfer.setData('text/plain', motEnCours.dataset.mot);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    });
+});
+// À la soumission, stocker la réponse dans un champ caché
+const form = document.getElementById('formTrous');
+form.addEventListener('submit', function(e) {
+    const reponses = Array.from(document.querySelectorAll('.trou')).map(trou => trou.firstChild ? trou.firstChild.textContent.trim() : '');
+    let input = document.getElementById('reponses_a_trous');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'reponses_a_trous';
+        input.id = 'reponses_a_trous';
+        form.appendChild(input);
+    }
+    input.value = JSON.stringify(reponses);
+});
+function confirmerRetourAccueil() {
+    if (confirm("Êtes-vous sûr de vouloir revenir à l'accueil ? Votre progression sera perdue.")) {
+        window.location.href = "/annuler_test_trous";
+    }
+}
+</script>
+<style>
+.trou {
+    display: inline-block;
+    min-width: 80px;
+    min-height: 32px;
+    border-bottom: 2px dashed #888;
+    margin: 0 4px;
+    vertical-align: middle;
+    font-weight: bold;
+    cursor: pointer;
+}
+.rangement {
+    display: inline-block;
+    min-width: 100px;
+    min-height: 40px;
+    border: 2px solid #bbb;
+    border-radius: 8px;
+    background: #f8f9fa;
+    margin: 0 8px 8px 0;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+}
+.rangement.bg-light {
+    background: #e2e6ea;
+}
+.mot {
+    cursor: grab;
+    font-size: 1.1em;
+    padding: 8px 16px;
+    margin: 4px 0;
+}
+.dropzone.bg-light {
+    background: #f8f9fa;
+}
+.dropzone.bg-info {
+    background: #d1ecf1;
+}
+</style>
+{% endblock %}
