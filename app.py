@@ -4,7 +4,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
-from models import db, Niveau, Chapitre, Question
+from models import db, Niveau, Chapitre, Question, QuestionsATrous
 from services import QCMService
 
 app = Flask(__name__, static_folder='static')
@@ -582,6 +582,179 @@ def chapitres_niveau(niveau):
                          chapitres=chapitres_info,
                          niveau=niveau,
                          titre_niveau=f"Chapitres - {niveau.upper()}")
+
+
+@app.route('/question_trous/<int:question_id>', methods=['GET', 'POST'])
+def repondre_question_trous(question_id):
+    question = QuestionsATrous.query.get_or_404(question_id)
+    # Générer la liste des mots à proposer (results + distracteurs, sans doublons)
+    mots = set(question.results_list)
+    for distracteurs in question.distracteurs_list:
+        mots.update(distracteurs)
+    choix_mots = sorted(mots)
+    if request.method == 'POST':
+        import json
+        reponses = request.form.get('reponses_a_trous')
+        try:
+            reponses_list = json.loads(reponses)
+        except Exception:
+            reponses_list = []
+        # Stocker dans la session
+        if 'reponses_a_trous' not in session:
+            session['reponses_a_trous'] = {}
+        session['reponses_a_trous'][str(question_id)] = reponses_list
+        flash('Réponse enregistrée.', 'success')
+        return redirect(url_for('resultats_trous'))
+    return render_template('question_trous.html', question=question, choix_mots=choix_mots)
+
+@app.route('/resultats_trous')
+def resultats_trous():
+    # Analyse des réponses à trous
+    reponses = session.get('reponses_a_trous', {})
+    resultats = []
+    score = 0
+    total = len(reponses)
+    for qid, user_reponses in reponses.items():
+        question = QuestionsATrous.query.get(int(qid))
+        correctes = question.results_list if question else []
+        est_correcte = user_reponses == correctes
+        if est_correcte:
+            score += 1
+        resultats.append({
+            'question': question,
+            'user_reponses': user_reponses,
+            'correctes': correctes,
+            'est_correcte': est_correcte
+        })
+    pourcentage = int((score / total) * 100) if total > 0 else 0
+    niveau = None
+    contexte = None
+    if resultats and resultats[0]['question'] and resultats[0]['question'].chapitre:
+        niveau = resultats[0]['question'].chapitre.niveau.nom
+        chapitre_info = resultats[0]['question'].chapitre.titre
+        contexte = f"{chapitre_info} ({niveau.upper()})"
+    else:
+        contexte = f"Niveau {niveau.upper()}" if niveau is not None else "Test à trous"
+    type_test = 'trous'
+    return render_template('resultats.html', score=score, total=total, pourcentage=pourcentage, reponses=resultats, niveau=niveau, type_test=type_test, contexte=contexte)
+
+
+@app.route('/admin/edit_question_trous/<int:question_id>', methods=['GET', 'POST'])
+@qcm_admin_required
+def edit_question_trous(question_id):
+    question = QuestionsATrous.query.get_or_404(question_id)
+    niveaux = Niveau.query.order_by(Niveau.ordre).all()
+    chapitres = Chapitre.query.order_by(Chapitre.titre).all()
+    if request.method == 'POST':
+        probleme = request.form['probleme']
+        difficulte = request.form['difficulte']
+        niveau_id = request.form['niveau_id']
+        chapitre_id = request.form['chapitre_id']
+        import json
+        nb_trous = probleme.count('[TROU]')
+        results = [request.form.get(f'result_{i}', '').strip() for i in range(nb_trous)]
+        distracteurs = []
+        for i in range(nb_trous):
+            d = request.form.get(f'distracteurs_{i}', '').strip()
+            distracteurs.append([mot.strip() for mot in d.split(',') if mot.strip()])
+        question.probleme = probleme
+        question.results = json.dumps(results)
+        question.distracteurs = json.dumps(distracteurs)
+        question.difficulte = difficulte
+        question.chapitre_id = chapitre_id
+        db.session.commit()
+        flash('Question à trous modifiée avec succès.', 'success')
+        return redirect(url_for('edit_question_trous', question_id=question.id))
+    return render_template('admin_edit_question_trous.html', question=question, niveaux=niveaux, chapitres=chapitres)
+
+@app.route('/admin/create_question_trous', methods=['GET', 'POST'])
+@qcm_admin_required
+def create_question_trous():
+    niveaux = Niveau.query.order_by(Niveau.ordre).all()
+    chapitres = Chapitre.query.order_by(Chapitre.titre).all()
+    if request.method == 'POST':
+        probleme = request.form['probleme']
+        difficulte = request.form['difficulte']
+        niveau_id = request.form['niveau_id']
+        chapitre_id = request.form['chapitre_id']
+        import json
+        nb_trous = probleme.count('[TROU]')
+        results = [request.form.get(f'result_{i}', '').strip() for i in range(nb_trous)]
+        distracteurs = []
+        for i in range(nb_trous):
+            d = request.form.get(f'distracteurs_{i}', '').strip()
+            distracteurs.append([mot.strip() for mot in d.split(',') if mot.strip()])
+        question = QuestionsATrous(
+            probleme=probleme,
+            results=json.dumps(results),
+            distracteurs=json.dumps(distracteurs),
+            difficulte=difficulte,
+            chapitre_id=chapitre_id
+        )
+        db.session.add(question)
+        db.session.commit()
+        flash('Question à trous créée avec succès.', 'success')
+        return redirect(url_for('create_question_trous'))
+    return render_template('admin_create_question_trous.html', niveaux=niveaux, chapitres=chapitres)
+
+@app.route('/test_trous')
+def test_trous():
+    niveaux = ['6eme', '5eme', '4eme', '3eme']
+    questions_par_niveau = {}
+    for niveau in niveaux:
+        question = QuestionsATrous.query.join(Chapitre).join(Niveau).filter(Niveau.nom == niveau).order_by(QuestionsATrous.id.asc()).first()
+        questions_par_niveau[niveau] = question.id if question else None
+    return render_template('test_trous.html', questions_par_niveau=questions_par_niveau)
+
+@app.route('/lancer_test_trous/<niveau>', methods=['GET', 'POST'])
+def lancer_test_trous(niveau):
+    # Récupérer dynamiquement toutes les questions à trous du niveau
+    questions = QuestionsATrous.query.join(Chapitre).join(Niveau).filter(Niveau.nom == niveau).order_by(QuestionsATrous.id.asc()).all()
+    total = len(questions)
+    # Réinitialiser l'index et les réponses uniquement au tout début du test
+    if request.method == 'GET' and (session.get('test_trous_index') is None or session.get('test_trous_index', 0) == 0):
+        session['test_trous_index'] = 0
+        session['reponses_a_trous'] = {}
+    index = session.get('test_trous_index', 0)
+    if index >= total or total == 0:
+        return redirect(url_for('resultats_trous'))
+    question = questions[index]
+    mots = set(question.results_list)
+    for distracteurs in question.distracteurs_list:
+        mots.update(distracteurs)
+    choix_mots = sorted(mots)
+    if request.method == 'POST':
+        import json
+        reponses = request.form.get('reponses_a_trous')
+        try:
+            reponses_list = json.loads(reponses)
+        except Exception:
+            reponses_list = []
+        session['reponses_a_trous'][str(question.id)] = reponses_list
+        session['test_trous_index'] = index + 1
+        if index + 1 >= total:
+            return redirect(url_for('resultats_trous'))
+        else:
+            return redirect(url_for('lancer_test_trous', niveau=niveau))
+    return render_template('question_trous.html', question=question, choix_mots=choix_mots, index=index+1, total=total, niveau=niveau)
+
+@app.route('/annuler_test_trous')
+def annuler_test_trous():
+    """Route pour annuler un test à trous en cours et nettoyer la session"""
+    # Nettoyer complètement la session des tests à trous
+    session.pop('test_trous_index', None)
+    session.pop('reponses_a_trous', None)
+    # Rediriger vers l'accueil
+    return redirect(url_for('index'))
+
+@app.route('/relancer_test_trous/<niveau>')
+def relancer_test_trous(niveau):
+    """Route pour relancer un test à trous en réinitialisant la session"""
+    # Réinitialiser complètement la session des tests à trous
+    session.pop('test_trous_index', None)
+    session.pop('reponses_a_trous', None)
+    # Rediriger vers le début du test à trous pour ce niveau
+    return redirect(url_for('lancer_test_trous', niveau=niveau))
 
 if __name__ == '__main__':
     app.run(debug=True)

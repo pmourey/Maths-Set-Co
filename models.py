@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
+import json
 
 db = SQLAlchemy()
 
@@ -101,3 +102,45 @@ class Question(db.Model):
             'chapitre_titre': self.chapitre.titre if self.chapitre else None,
             'niveau_nom': self.chapitre.niveau.nom if self.chapitre and self.chapitre.niveau else None
         }
+
+class QuestionsATrous(db.Model):
+    """Modèle pour les questions à trous"""
+    __tablename__ = 'questions_a_trous'
+
+    id = Column(Integer, primary_key=True)
+    probleme = Column(Text, nullable=False)
+    results = Column(Text, nullable=False) # JSON list of correct words (ordered)
+    distracteurs = Column(Text, nullable=True) # JSON list of lists (distracteurs par trou)
+    difficulte = Column(String(20), nullable=False)
+    chapitre_id = Column(Integer, ForeignKey('chapitres.id'), nullable=False)
+
+    chapitre = relationship('Chapitre')
+
+    def __repr__(self):
+        return f'<QuestionsATrous {self.id}: {self.probleme[:50]}...>'
+
+    @property
+    def results_list(self):
+        import json
+        return json.loads(self.results)
+
+    @property
+    def distracteurs_list(self):
+        import json
+        if self.distracteurs:
+            return json.loads(self.distracteurs)
+        return [[] for _ in self.results_list]
+
+    def to_dict(self):
+        import json
+        return {
+            'id': self.id,
+            'probleme': self.probleme,
+            'results': self.results_list,
+            'distracteurs': self.distracteurs_list,
+            'difficulte': self.difficulte,
+            'chapitre_id': self.chapitre_id,
+            'chapitre_nom': self.chapitre.nom if self.chapitre else None,
+            'chapitre_titre': self.chapitre.titre if self.chapitre else None,
+        }
+

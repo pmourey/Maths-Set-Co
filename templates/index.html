@@ -69,9 +69,15 @@
                     <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
                         🛠️ Administration QCM
                     </a>
+                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg">
+                        ✏️ Administration test à trous
+                    </a>
                 {% elif session.qcm_admin_access %}
                     <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
                         🛠️ Administration QCM
+                    </a>
+                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg">
+                        ✏️ Administration test à trous
                     </a>
                 {% endif %}
             {% else %}
@@ -81,6 +87,9 @@
             {% endif %}
             <a href="{{ url_for('chapitres') }}" class="btn btn-success btn-lg">
                 📖 Tests par chapitre
+            </a>
+            <a href="{{ url_for('test_trous') }}" class="btn btn-secondary btn-lg">
+                ✏️ Test à trous
             </a>
         </div>
     </div>
