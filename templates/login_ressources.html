@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Connexion - Accès aux Ressources{% endblock %}
+{% block title %}Connexion - Administration QCM & Ressources{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-body p-5">
-        <h1 class="card-title text-center mb-4">🔐 Accès aux Ressources</h1>
-        <p class="lead text-center mb-5">Veuillez saisir le mot de passe pour accéder aux documents pédagogiques</p>
+        <h1 class="card-title text-center mb-4">🔐 Connexion à l’administration QCM et ressources</h1>
+        <p class="lead text-center mb-4">Entrez votre mot de passe pour accéder à l’administration des QCM ou à l’ensemble des ressources PDF selon votre niveau d’accès.</p>
 
         <div class="row justify-content-center">
             <div class="col-md-6">
@@ -47,18 +47,12 @@
                     </div>
                 </form>
 
-                <div class="text-center mt-4">
-                    <small class="text-muted">
-                        💡 Contactez l'administrateur pour obtenir le mot de passe d'accès aux ressources.
-                    </small>
+                <div class="alert alert-info mt-4 text-center">
+                    <strong>Deux niveaux d’accès :</strong><br>
+                    • <b>Accès à l’administration QCM</b> (mot de passe admin QCM)<br>
+                    • <b>Accès complet</b> (mot de passe administrateur, administration QCM + ressources PDF)
                 </div>
             </div>
-        </div>
-
-        <div class="text-center mt-5">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                ← Retour à l'accueil
-            </a>
         </div>
     </div>
 </div>

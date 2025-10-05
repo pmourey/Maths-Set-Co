@@ -9,7 +9,7 @@ from services import QCMService
 
 app = Flask(__name__, static_folder='static')
 
-load_dotenv(os.path.join(app.instance_path, '.env'))
+load_dotenv(os.path.join(app.instance_path, '.env'))  # charge le fichier .env dans le dossier instance/
 # Clé secrète pour les sessions (chargée depuis .env)
 app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key_for_development')
 # Configuration SQLAlchemy
@@ -22,15 +22,44 @@ db.init_app(app)
 # Configuration pour la persistance des sessions
 app.permanent_session_lifetime = timedelta(days=30)  # Session valide 30 jours
 
-# Mot de passe pour accéder aux ressources (chargé depuis .env)
-RESSOURCES_PASSWORD = os.getenv('RESSOURCES_PASSWORD')
+ADMIN_PWD = os.getenv('ADMIN_PWD')
+QCM_ADMIN_PWD = os.getenv('QCM_ADMIN_PWD')
+
+# Décorateur pour accès admin
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_access'):
+            flash('Accès administrateur requis.')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def login_required(f):
     """Décorateur pour protéger les routes nécessitant une authentification"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('ressources_access'):
-            flash('Accès restreint. Veuillez vous connecter pour accéder aux ressources.')
+        if not (session.get('ressources_access') or session.get('qcm_admin_access') or session.get('admin_access')):
+            flash('Accès restreint. Veuillez vous connecter pour accéder aux ressources ou à l’administration QCM.')
+            return redirect(url_for('login_ressources'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def qcm_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not (session.get('qcm_admin_access') or session.get('admin_access')):
+            flash('Accès QCM administrateur requis.')
+            return redirect(url_for('login_ressources'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def ressources_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_access'):
+            flash('Accès complet requis pour consulter les ressources.')
             return redirect(url_for('login_ressources'))
         return f(*args, **kwargs)
     return decorated_function
@@ -223,89 +252,101 @@ def robots():
 def google_verification():
     return send_from_directory('.', 'google075dc122689af97b.html')
 
+# Routes ressources et PDF protégées
 @app.route('/pdf/maths-6eme')
 @login_required
+@ressources_required
 def consulter_pdf_6eme():
     """Affiche le PDF Maths 6ème dans le navigateur"""
     return send_from_directory('static', 'Maths_6eme.pdf')
 
 @app.route('/telecharger/maths-6eme')
 @login_required
+@ressources_required
 def telecharger_pdf_6eme():
     """Télécharge le PDF Maths 6ème"""
     return send_file('static/Maths_6eme.pdf', as_attachment=True, download_name='Maths_6eme.pdf')
 
 @app.route('/pdf/maths-5eme')
 @login_required
+@ressources_required
 def consulter_pdf_5eme():
     """Affiche le PDF Maths 5ème dans le navigateur"""
     return send_from_directory('static', 'Maths_5eme.pdf')
 
 @app.route('/telecharger/maths-5eme')
 @login_required
+@ressources_required
 def telecharger_pdf_5eme():
     """Télécharge le PDF Maths 5ème"""
     return send_file('static/Maths_5eme.pdf', as_attachment=True, download_name='Maths_5eme.pdf')
 
 @app.route('/pdf/maths-4eme')
 @login_required
+@ressources_required
 def consulter_pdf_4eme():
     """Affiche le PDF Maths 4ème dans le navigateur"""
     return send_from_directory('static', 'Maths_4eme.pdf')
 
 @app.route('/telecharger/maths-4eme')
 @login_required
+@ressources_required
 def telecharger_pdf_4eme():
     """Télécharge le PDF Maths 4ème"""
     return send_file('static/Maths_4eme.pdf', as_attachment=True, download_name='Maths_4eme.pdf')
 
 @app.route('/pdf/maths-3eme')
 @login_required
+@ressources_required
 def consulter_pdf_3eme():
     """Affiche le PDF Maths 3ème dans le navigateur"""
     return send_from_directory('static', 'Maths_3eme.pdf')
 
 @app.route('/telecharger/maths-3eme')
 @login_required
+@ressources_required
 def telecharger_pdf_3eme():
     """Télécharge le PDF Maths 3ème"""
     return send_file('static/Maths_3eme.pdf', as_attachment=True, download_name='Maths_3eme.pdf')
 
 @app.route('/ressources')
 @login_required
+@ressources_required
 def ressources():
     """Page listant les ressources disponibles"""
     return render_template('ressources.html')
 
 @app.route('/login_ressources', methods=['GET', 'POST'])
 def login_ressources():
-    """Page de connexion pour accéder aux ressources"""
-    # Vérifier si l'utilisateur est déjà connecté
-    if session.get('ressources_access'):
-        jours_restants = None
-        if session.permanent:
-            jours_restants = app.permanent_session_lifetime.days
-            flash(f'Vous êtes déjà connecté aux ressources. ({jours_restants} jours restants)')
-        else:
-            flash('Vous êtes déjà connecté aux ressources. (Session temporaire)')
-        return redirect(url_for('ressources'))
+    """Page de connexion pour accéder à l'administration QCM ou aux ressources"""
+    if session.get('qcm_admin_access') or session.get('admin_access'):
+        flash('Vous êtes déjà connecté.')
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
         mot_de_passe = request.form.get('mot_de_passe')
         se_souvenir = request.form.get('se_souvenir')
 
-        app.logger.debug(f"[DEBUG] RESSOURCES_PASSWORD chargé: '{RESSOURCES_PASSWORD}'")  # À retirer après vérification
-        if mot_de_passe == RESSOURCES_PASSWORD:
-            session['ressources_access'] = True
-
+        if mot_de_passe == ADMIN_PWD:
+            session['admin_access'] = True
+            session['qcm_admin_access'] = True
             if se_souvenir:
                 session.permanent = True
-                flash('Connexion réussie. Vous resterez connecté pendant 30 jours.')
+                flash('Connexion complète réussie. Vous resterez connecté pendant 30 jours.')
             else:
                 session.permanent = False
-                flash('Connexion réussie. Vous pouvez maintenant accéder aux ressources.')
-
-            return redirect(url_for('ressources'))
+                flash('Connexion complète réussie. Vous pouvez maintenant accéder à l’administration QCM et aux ressources.')
+            return redirect(url_for('index'))
+        elif mot_de_passe == QCM_ADMIN_PWD:
+            session['qcm_admin_access'] = True
+            session['admin_access'] = False
+            if se_souvenir:
+                session.permanent = True
+                flash('Connexion QCM admin réussie. Vous resterez connecté pendant 30 jours.')
+            else:
+                session.permanent = False
+                flash('Connexion QCM admin réussie. Vous pouvez maintenant accéder à l’administration QCM.')
+            return redirect(url_for('index'))
         else:
             flash('Mot de passe incorrect. Veuillez réessayer.')
 
@@ -313,20 +354,22 @@ def login_ressources():
 
 @app.route('/logout_ressources')
 def logout_ressources():
-    """Déconnexion et retour à l'accueil"""
-    session.pop('ressources_access', None)
-    flash('Vous avez été déconnecté des ressources.')
+    session.pop('admin_access', None)
+    session.pop('qcm_admin_access', None)
+    flash('Vous avez été déconnecté.')
     return redirect(url_for('index'))
 
 @app.route('/admin')
 @login_required
+@qcm_admin_required
 def admin():
     """Page d'administration pour gérer les questions QCM"""
     return render_template('admin.html')
 
-# Routes API pour l'administration
+# Routes API pour l'administration QCM
 @app.route('/admin/api/questions')
 @login_required
+@qcm_admin_required
 def admin_api_questions():
     """API pour récupérer toutes les questions avec filtres optionnels"""
     niveau = request.args.get('niveau')
@@ -363,12 +406,14 @@ def admin_api_questions():
 
 @app.route('/admin/api/statistiques')
 @login_required
+@qcm_admin_required
 def admin_api_statistiques():
     """API pour récupérer les statistiques"""
     return QCMService.get_statistiques()
 
 @app.route('/admin/api/chapitres/<niveau>')
 @login_required
+@qcm_admin_required
 def admin_api_chapitres(niveau):
     """API pour récupérer les chapitres d'un niveau"""
     chapitres = QCMService.get_chapitres_par_niveau(niveau)
@@ -376,6 +421,7 @@ def admin_api_chapitres(niveau):
 
 @app.route('/admin/api/question', methods=['POST'])
 @login_required
+@qcm_admin_required
 def admin_api_ajouter_question():
     """API pour ajouter une nouvelle question"""
     try:
@@ -413,6 +459,7 @@ def admin_api_ajouter_question():
 
 @app.route('/admin/api/question/<int:question_id>', methods=['PUT'])
 @login_required
+@qcm_admin_required
 def admin_api_modifier_question(question_id):
     """API pour modifier une question existante"""
     try:
@@ -433,6 +480,7 @@ def admin_api_modifier_question(question_id):
 
 @app.route('/admin/api/question/<int:question_id>', methods=['GET'])
 @login_required
+@qcm_admin_required
 def admin_api_get_question(question_id):
     """API pour récupérer une question spécifique"""
     try:
@@ -459,6 +507,7 @@ def admin_api_get_question(question_id):
 
 @app.route('/admin/api/question/<int:question_id>', methods=['DELETE'])
 @login_required
+@qcm_admin_required
 def admin_api_supprimer_question(question_id):
     """API pour supprimer une question"""
     try:

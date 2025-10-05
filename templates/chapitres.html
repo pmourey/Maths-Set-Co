@@ -103,9 +103,11 @@
                 🎯 Test complet {{ niveau.upper() }}
             </a>
             {% endif %}
-            <a href="{{ url_for('login_ressources') }}" class="btn btn-outline-secondary btn-lg">
+            {% if session.admin_access %}
+            <a href="{{ url_for('ressources') }}" class="btn btn-outline-secondary btn-lg">
                 📄 Consulter les ressources
             </a>
+            {% endif %}
         </div>
     </div>
 </div>

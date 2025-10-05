@@ -57,12 +57,30 @@
             </small>
         </div>
 
-        <div class="text-center mt-4">
-            <a href="{{ url_for('login_ressources') }}" class="btn btn-outline-light btn-lg me-3">
-                🔐 Ressources & Documents PDF
-            </a>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            {% if session.admin_access or session.qcm_admin_access %}
+                <a href="{{ url_for('logout_ressources') }}" class="btn btn-danger btn-lg">
+                    🔒 Déconnexion
+                </a>
+                {% if session.admin_access %}
+                    <a href="{{ url_for('ressources') }}" class="btn btn-info btn-lg">
+                        📚 Ressources pédagogiques
+                    </a>
+                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
+                        🛠️ Administration QCM
+                    </a>
+                {% elif session.qcm_admin_access %}
+                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
+                        🛠️ Administration QCM
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('login_ressources') }}" class="btn btn-primary btn-lg">
+                    🔑 Connexion
+                </a>
+            {% endif %}
             <a href="{{ url_for('chapitres') }}" class="btn btn-success btn-lg">
-                📚 Tests par Chapitre
+                📖 Tests par chapitre
             </a>
         </div>
     </div>
