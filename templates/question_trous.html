@@ -48,16 +48,215 @@ parts.forEach((part, idx) => {
 const rangements = document.querySelectorAll('.rangement');
 const trous = document.querySelectorAll('.trou');
 let motEnCours = null;
+let isTouchDevice = 'ontouchstart' in window;
+
 function initDraggableMots() {
     document.querySelectorAll('.mot').forEach(mot => {
         mot.setAttribute('draggable', 'true');
+
+        // Événements drag and drop pour ordinateur
         mot.addEventListener('dragstart', e => {
             motEnCours = mot;
             e.dataTransfer.setData('text/plain', mot.dataset.mot);
             e.dataTransfer.effectAllowed = 'move';
         });
+
+        // Événements tactiles pour smartphone
+        if (isTouchDevice) {
+            mot.addEventListener('touchstart', handleTouchStart, {passive: false});
+            mot.addEventListener('touchmove', handleTouchMove, {passive: false});
+            mot.addEventListener('touchend', handleTouchEnd, {passive: false});
+        }
+
+        // Clic pour mobile comme alternative
+        mot.addEventListener('click', handleClick);
     });
 }
+
+// Variables pour le support tactile
+let selectedMot = null;
+let touchStartX = 0;
+let touchStartY = 0;
+let isDragging = false;
+let ghostElement = null;
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    selectedMot = e.target;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    selectedMot.style.opacity = '0.5';
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!selectedMot) return;
+
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartX);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+
+    if (deltaX > 10 || deltaY > 10) {
+        if (!isDragging) {
+            isDragging = true;
+            createGhostElement(selectedMot, touch.clientX, touch.clientY);
+        }
+        updateGhostPosition(touch.clientX, touch.clientY);
+    }
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    if (!selectedMot) return;
+
+    selectedMot.style.opacity = '';
+
+    if (isDragging && ghostElement) {
+        const touch = e.changedTouches[0];
+        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetTrou = elementUnder?.closest('.trou');
+        const targetRangement = elementUnder?.closest('.rangement');
+
+        if (targetTrou) {
+            placerMotDansTrou(selectedMot, targetTrou);
+        } else if (targetRangement && targetRangement.children.length === 0) {
+            placerMotDansRangement(selectedMot, targetRangement);
+        }
+    }
+
+    removeGhostElement();
+    selectedMot = null;
+    isDragging = false;
+}
+
+function createGhostElement(mot, x, y) {
+    ghostElement = document.createElement('div');
+    ghostElement.className = 'ghost-mot';
+    ghostElement.textContent = mot.textContent;
+    ghostElement.style.cssText = `
+        position: fixed;
+        z-index: 9999;
+        background: #0d6efd;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 1.1em;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: none;
+        left: ${x}px;
+        top: ${y}px;
+    `;
+    document.body.appendChild(ghostElement);
+}
+
+function updateGhostPosition(x, y) {
+    if (ghostElement) {
+        ghostElement.style.left = x + 'px';
+        ghostElement.style.top = y + 'px';
+    }
+}
+
+function removeGhostElement() {
+    if (ghostElement) {
+        document.body.removeChild(ghostElement);
+        ghostElement = null;
+    }
+}
+
+function handleClick(e) {
+    if (!isTouchDevice) return;
+
+    const mot = e.target;
+
+    // Si un mot est déjà sélectionné, le désélectionner
+    document.querySelectorAll('.mot-selected').forEach(m => {
+        m.classList.remove('mot-selected');
+    });
+
+    // Sélectionner le mot cliqué
+    mot.classList.add('mot-selected');
+
+    // Ajouter des gestionnaires de clic sur les trous et rangements
+    addClickHandlers();
+}
+
+function addClickHandlers() {
+    // Ajouter gestionnaires temporaires
+    trous.forEach(trou => {
+        trou.addEventListener('click', handleTrouClick, {once: true});
+    });
+
+    rangements.forEach(rangement => {
+        rangement.addEventListener('click', handleRangementClick, {once: true});
+    });
+}
+
+function handleTrouClick(e) {
+    e.stopPropagation();
+    const selectedMot = document.querySelector('.mot-selected');
+    if (selectedMot) {
+        placerMotDansTrou(selectedMot, e.currentTarget);
+        selectedMot.classList.remove('mot-selected');
+    }
+}
+
+function handleRangementClick(e) {
+    e.stopPropagation();
+    const selectedMot = document.querySelector('.mot-selected');
+    if (selectedMot && e.currentTarget.children.length === 0) {
+        placerMotDansRangement(selectedMot, e.currentTarget);
+        selectedMot.classList.remove('mot-selected');
+    }
+}
+
+function placerMotDansTrou(mot, trou) {
+    // Gérer le remplacement si le trou est occupé
+    if (trou.firstChild) {
+        const motRemplace = trou.firstChild;
+        const rangementVide = Array.from(rangements).find(r => r.children.length === 0);
+        if (rangementVide) {
+            rangementVide.appendChild(motRemplace);
+        } else {
+            trou.removeChild(motRemplace);
+        }
+        trou.classList.remove('bg-info');
+    }
+
+    // Créer une copie du mot et la placer dans le trou
+    const nouveauMot = document.createElement('span');
+    nouveauMot.className = 'mot badge bg-primary';
+    nouveauMot.setAttribute('draggable', 'true');
+    nouveauMot.setAttribute('data-mot', mot.dataset.mot);
+    nouveauMot.textContent = mot.textContent;
+
+    trou.appendChild(nouveauMot);
+    trou.classList.add('bg-info');
+
+    // Supprimer l'ancien mot
+    if (mot.parentNode) {
+        mot.parentNode.removeChild(mot);
+    }
+
+    initDraggableMots();
+}
+
+function placerMotDansRangement(mot, rangement) {
+    // Enlever le mot des trous s'il y était
+    trous.forEach(trou => {
+        if (trou.firstChild && trou.firstChild.dataset.mot === mot.dataset.mot) {
+            trou.removeChild(trou.firstChild);
+            trou.classList.remove('bg-info');
+        }
+    });
+
+    rangement.appendChild(mot);
+    initDraggableMots();
+}
+
+// Événements drag and drop originaux pour ordinateur
 initDraggableMots();
 trous.forEach(trou => {
     trou.addEventListener('dragover', e => {
@@ -94,39 +293,6 @@ trous.forEach(trou => {
         }
     });
 });
-rangements.forEach(rangement => {
-    rangement.addEventListener('dragover', e => {
-        e.preventDefault();
-        rangement.classList.add('bg-light');
-    });
-    rangement.addEventListener('dragleave', e => {
-        rangement.classList.remove('bg-light');
-    });
-    rangement.addEventListener('drop', e => {
-        e.preventDefault();
-        rangement.classList.remove('bg-light');
-        if (rangement.children.length === 0 && motEnCours) {
-            trous.forEach(trou => {
-                if (trou.firstChild && trou.firstChild.dataset.mot === motEnCours.dataset.mot) {
-                    trou.removeChild(trou.firstChild);
-                    trou.classList.remove('bg-info');
-                }
-            });
-            rangement.appendChild(motEnCours);
-            initDraggableMots();
-            motEnCours = null;
-        }
-    });
-});
-trous.forEach(trou => {
-    trou.addEventListener('dragstart', e => {
-        if (trou.firstChild && e.target.classList.contains('mot')) {
-            motEnCours = e.target;
-            e.dataTransfer.setData('text/plain', motEnCours.dataset.mot);
-            e.dataTransfer.effectAllowed = 'move';
-        }
-    });
-});
 // À la soumission, stocker la réponse dans un champ caché
 const form = document.getElementById('formTrous');
 form.addEventListener('submit', function(e) {
@@ -148,6 +314,25 @@ function confirmerRetourAccueil() {
 }
 </script>
 <style>
+.mot {
+    cursor: grab;
+    font-size: 1.1em;
+    padding: 8px 16px;
+    margin: 4px 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    transition: all 0.2s ease;
+}
+
+.mot-selected {
+    background-color: #ffc107 !important;
+    color: #000;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.5);
+}
+
 .trou {
     display: inline-block;
     min-width: 80px;
@@ -157,7 +342,10 @@ function confirmerRetourAccueil() {
     vertical-align: middle;
     font-weight: bold;
     cursor: pointer;
+    padding: 2px;
+    transition: background-color 0.2s ease;
 }
+
 .rangement {
     display: inline-block;
     min-width: 100px;
@@ -169,21 +357,59 @@ function confirmerRetourAccueil() {
     text-align: center;
     vertical-align: middle;
     position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
+
 .rangement.bg-light {
     background: #e2e6ea;
 }
-.mot {
-    cursor: grab;
-    font-size: 1.1em;
-    padding: 8px 16px;
-    margin: 4px 0;
+
+/* Amélioration pour mobile */
+@media (max-width: 768px) {
+    .mot {
+        padding: 12px 20px;
+        font-size: 1.2em;
+        margin: 8px 4px;
+    }
+
+    .trou {
+        min-width: 100px;
+        min-height: 40px;
+        padding: 8px;
+        margin: 0 8px;
+    }
+
+    .rangement {
+        min-width: 120px;
+        min-height: 60px;
+        margin: 8px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn.btn-light.border {
+        margin-top: 10px;
+        align-self: flex-end;
+    }
 }
-.dropzone.bg-light {
-    background: #f8f9fa;
-}
-.dropzone.bg-info {
-    background: #d1ecf1;
+
+/* Instructions visuelles pour mobile */
+.mobile-instructions {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #1565c0;
 }
 </style>
 {% endblock %}
