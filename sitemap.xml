@@ -1,16 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Page d'accueil principale -->
   <url>
     <loc>https://mathsetco.eu.pythonanywhere.com/</loc>
     <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Pages de tests par niveau (maintenant indexables) -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/niveau/6eme</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://mathsetco.eu.pythonanywhere.com/question</loc>
+    <loc>https://mathsetco.eu.pythonanywhere.com/niveau/5eme</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/niveau/4eme</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/niveau/3eme</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Pages de sélection de chapitres -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/chapitres</loc>
     <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://mathsetco.eu.pythonanywhere.com/resultats</loc>
+    <loc>https://mathsetco.eu.pythonanywhere.com/chapitres/6eme</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/chapitres/5eme</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/chapitres/4eme</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/chapitres/3eme</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Page de tests à trous -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/test_trous</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Page de connexion -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/login_ressources</loc>
+    <priority>0.6</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+
+  <!-- Pages de ressources (accès restreint mais toujours indexables) -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/ressources</loc>
     <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Fichiers statiques importants -->
+  <url>
+    <loc>https://mathsetco.eu.pythonanywhere.com/robots.txt</loc>
+    <priority>0.1</priority>
+    <changefreq>yearly</changefreq>
   </url>
 </urlset>
-

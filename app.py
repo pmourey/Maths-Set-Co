@@ -124,7 +124,23 @@ def choisir_niveau(niveau):
         session['ressources_access'] = ressources_access
         session.permanent = session_permanent
 
-    return redirect(url_for('question'))
+    # Servir directement la première question au lieu de rediriger
+    # Cela permet à Google d'indexer correctement la page
+    questions_niveau = QCMService.get_questions_niveau(niveau)
+    if not questions_niveau:
+        flash('Aucune question disponible pour ce niveau')
+        return redirect(url_for('index'))
+
+    # Afficher la première question directement
+    question = questions_niveau[0]
+    contexte = f"Niveau {niveau.upper()}"
+
+    return render_template('question.html',
+                         question=question,
+                         question_num=1,
+                         total_questions=len(questions_niveau),
+                         niveau=niveau,
+                         contexte=contexte)
 
 @app.route('/question')
 def question():
