@@ -129,15 +129,15 @@
         </div>
         {% endif %}
 
-        <div class="text-center mt-4">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg me-3">
+        <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg mb-2">
                 🏠 Retour à l'accueil
             </a>
-            <a href="{{ url_for('test_trous') }}" class="btn btn-outline-warning btn-lg me-3">
+            <a href="{{ url_for('test_trous') }}" class="btn btn-outline-warning btn-lg mb-2">
                 ✏️ Tests à trous
             </a>
             {% if session.admin_access %}
-            <a href="{{ url_for('ressources') }}" class="btn btn-outline-secondary btn-lg">
+            <a href="{{ url_for('ressources') }}" class="btn btn-outline-secondary btn-lg mb-2">
                 📄 Consulter les ressources
             </a>
             {% endif %}

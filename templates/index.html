@@ -110,38 +110,38 @@
             </small>
         </div>
 
-        <div class="d-flex justify-content-center gap-3 mt-4">
+        <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
             {% if session.admin_access or session.qcm_admin_access %}
-                <a href="{{ url_for('logout_ressources') }}" class="btn btn-danger btn-lg">
+                <a href="{{ url_for('logout_ressources') }}" class="btn btn-danger btn-lg mb-2">
                     🔒 Déconnexion
                 </a>
                 {% if session.admin_access %}
-                    <a href="{{ url_for('ressources') }}" class="btn btn-info btn-lg">
+                    <a href="{{ url_for('ressources') }}" class="btn btn-info btn-lg mb-2">
                         📚 Ressources pédagogiques
                     </a>
-                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
+                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg mb-2">
                         🛠️ Administration QCM
                     </a>
-                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg">
+                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg mb-2">
                         ✏️ Administration test à trous
                     </a>
                 {% elif session.qcm_admin_access %}
-                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg">
+                    <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg mb-2">
                         🛠️ Administration QCM
                     </a>
-                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg">
+                    <a href="{{ url_for('create_question_trous') }}" class="btn btn-secondary btn-lg mb-2">
                         ✏️ Administration test à trous
                     </a>
                 {% endif %}
             {% else %}
-                <a href="{{ url_for('login_ressources') }}" class="btn btn-primary btn-lg">
+                <a href="{{ url_for('login_ressources') }}" class="btn btn-primary btn-lg mb-2">
                     🔑 Connexion
                 </a>
             {% endif %}
-            <a href="{{ url_for('chapitres') }}" class="btn btn-success btn-lg">
+            <a href="{{ url_for('chapitres') }}" class="btn btn-success btn-lg mb-2">
                 📖 Tests par chapitre
             </a>
-            <a href="{{ url_for('test_trous') }}" class="btn btn-secondary btn-lg">
+            <a href="{{ url_for('test_trous') }}" class="btn btn-secondary btn-lg mb-2">
                 ✏️ Test à trous
             </a>
         </div>
