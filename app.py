@@ -3,6 +3,7 @@ from functools import wraps
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
+import time
 
 from models import db, Niveau, Chapitre, Question, QuestionsATrous
 from services import QCMService
@@ -755,6 +756,184 @@ def relancer_test_trous(niveau):
     session.pop('reponses_a_trous', None)
     # Rediriger vers le début du test à trous pour ce niveau
     return redirect(url_for('lancer_test_trous', niveau=niveau))
+
+@app.route('/sauvegarder_et_quitter', methods=['POST'])
+def sauvegarder_et_quitter():
+    """Route pour sauvegarder la progression avant de quitter un test"""
+    try:
+        data = request.get_json()
+        destination = data.get('destination', 'index')
+
+        # Créer une clé unique pour la sauvegarde basée sur le niveau/chapitre
+        if session.get('mode') == 'chapitre':
+            save_key = f"progress_{session.get('niveau')}_{session.get('chapitre')}"
+        else:
+            save_key = f"progress_{session.get('niveau')}"
+
+        # Sauvegarder la progression actuelle
+        progress_data = {
+            'niveau': session.get('niveau'),
+            'mode': session.get('mode'),
+            'chapitre': session.get('chapitre'),
+            'question_courante': session.get('question_courante', 0),
+            'score': session.get('score', 0),
+            'reponses': session.get('reponses', []),
+            'timestamp': time.time()
+        }
+
+        session[save_key] = progress_data
+
+        # Nettoyer les variables de session actuelle
+        session.pop('niveau', None)
+        session.pop('score', None)
+        session.pop('question_courante', None)
+        session.pop('reponses', None)
+        session.pop('mode', None)
+        session.pop('chapitre', None)
+
+        return {'success': True, 'redirect_url': url_for(destination)}
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
+
+@app.route('/sauvegarder_et_quitter_trous', methods=['POST'])
+def sauvegarder_et_quitter_trous():
+    """Route pour sauvegarder la progression des tests à trous avant de quitter"""
+    try:
+        data = request.get_json()
+        niveau = data.get('niveau')
+        destination = data.get('destination', 'index')  # Par défaut vers l'index si pas spécifié
+
+        if not niveau:
+            return {'success': False, 'error': 'Niveau manquant'}, 400
+
+        # Créer une clé unique pour la sauvegarde des tests à trous
+        save_key = f"progress_trous_{niveau}"
+
+        # Sauvegarder la progression actuelle
+        progress_data = {
+            'type': 'trous',
+            'niveau': niveau,
+            'test_trous_index': session.get('test_trous_index', 0),
+            'reponses_a_trous': session.get('reponses_a_trous', {}),
+            'timestamp': time.time()
+        }
+
+        session[save_key] = progress_data
+
+        # Nettoyer les variables de session actuelle
+        session.pop('test_trous_index', None)
+        session.pop('reponses_a_trous', None)
+
+        # Rediriger selon la destination demandée
+        if destination == 'test_trous':
+            redirect_url = url_for('test_trous')
+        else:
+            redirect_url = url_for('index')
+
+        return {'success': True, 'redirect_url': redirect_url}
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
+
+@app.route('/reprendre_test/<niveau>')
+@app.route('/reprendre_test/<niveau>/<chapitre>')
+def reprendre_test(niveau, chapitre=None):
+    """Route pour reprendre un test sauvegardé"""
+    if chapitre:
+        save_key = f"progress_{niveau}_{chapitre}"
+    else:
+        save_key = f"progress_{niveau}"
+
+    progress_data = session.get(save_key)
+    if not progress_data:
+        flash('Aucune progression sauvegardée trouvée pour ce test.')
+        return redirect(url_for('index'))
+
+    # Restaurer la progression
+    session['niveau'] = progress_data['niveau']
+    session['mode'] = progress_data.get('mode')
+    session['chapitre'] = progress_data.get('chapitre')
+    session['question_courante'] = progress_data['question_courante']
+    session['score'] = progress_data['score']
+    session['reponses'] = progress_data['reponses']
+
+    # Supprimer la sauvegarde
+    session.pop(save_key, None)
+
+    flash(f'Test repris. Question {progress_data["question_courante"] + 1}')
+    return redirect(url_for('question'))
+
+@app.route('/reprendre_test_trous/<niveau>')
+def reprendre_test_trous(niveau):
+    """Route pour reprendre un test à trous sauvegardé"""
+    save_key = f"progress_trous_{niveau}"
+
+    progress_data = session.get(save_key)
+    if not progress_data:
+        flash('Aucune progression sauvegardée trouvée pour ce test à trous.')
+        return redirect(url_for('index'))
+
+    # Restaurer la progression
+    session['test_trous_index'] = progress_data['test_trous_index']
+    session['reponses_a_trous'] = progress_data['reponses_a_trous']
+
+    # Supprimer la sauvegarde
+    session.pop(save_key, None)
+
+    flash(f'Test à trous repris pour le niveau {niveau.upper()}.')
+    return redirect(url_for('lancer_test_trous', niveau=niveau))
+
+@app.route('/supprimer_tous_tests', methods=['POST'])
+def supprimer_tous_tests():
+    """Route pour supprimer tous les tests en cours"""
+    try:
+        # Supprimer tous les tests QCM sauvegardés
+        keys_to_remove = []
+        for key in session.keys():
+            if key.startswith('progress_'):
+                keys_to_remove.append(key)
+        
+        for key in keys_to_remove:
+            session.pop(key, None)
+        
+        return {'success': True, 'message': 'Tous les tests en cours ont été supprimés'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
+
+@app.route('/supprimer_tests_chapitre', methods=['POST'])
+def supprimer_tests_chapitre():
+    """Route pour supprimer seulement les tests de chapitres en cours"""
+    try:
+        keys_to_remove = []
+        for key in session.keys():
+            if key.startswith('progress_') and not key.startswith('progress_trous_'):
+                test_data = session[key]
+                if test_data.get('mode') == 'chapitre':
+                    keys_to_remove.append(key)
+        
+        for key in keys_to_remove:
+            session.pop(key, None)
+        
+        return {'success': True, 'message': 'Tests de chapitres en cours supprimés'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
+
+@app.route('/supprimer_tests_trous', methods=['POST'])
+def supprimer_tests_trous():
+    """Route pour supprimer seulement les tests à trous en cours"""
+    try:
+        keys_to_remove = []
+        for key in session.keys():
+            if key.startswith('progress_trous_'):
+                keys_to_remove.append(key)
+        
+        for key in keys_to_remove:
+            session.pop(key, None)
+        
+        return {'success': True, 'message': 'Tests à trous en cours supprimés'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 400
 
 if __name__ == '__main__':
     app.run(debug=True)

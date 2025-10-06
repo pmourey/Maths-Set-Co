@@ -9,6 +9,41 @@
         <h1 class="card-title mb-4">{{ titre_niveau if titre_niveau else 'Tests par Chapitre' }}</h1>
         <p class="lead mb-4">Choisissez un chapitre spécifique pour vous entraîner</p>
 
+        <!-- Section pour les tests en cours correspondant aux chapitres -->
+        {% set saved_tests_chapitre = [] %}
+        {% for key in session.keys() %}
+            {% if key.startswith('progress_') and not key.startswith('progress_trous_') %}
+                {% set test_data = session[key] %}
+                {% if test_data.mode == 'chapitre' %}
+                    {% set _ = saved_tests_chapitre.append(test_data) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if saved_tests_chapitre %}
+        <div class="alert alert-warning mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="mb-0">📋 Tests de chapitres en cours</h5>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerTestsChapitres()">
+                    🗑️ Supprimer ces tests
+                </button>
+            </div>
+            <p class="mb-3">Vous avez des tests par chapitre en cours de réalisation :</p>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                {% for test in saved_tests_chapitre %}
+                <div class="mb-2">
+                    <a href="{{ url_for('reprendre_test', niveau=test.niveau, chapitre=test.chapitre) }}"
+                       class="btn btn-sm btn-outline-success">
+                        📚 Reprendre {{ test.niveau|upper }} - {{ test.chapitre }}
+                        <br><small>(Question {{ test.question_courante + 1 }})</small>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Navigation par niveau -->
         {% if not niveau %}
         <div class="mb-5">
@@ -98,11 +133,9 @@
             <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg me-3">
                 🏠 Retour à l'accueil
             </a>
-            {% if niveau %}
-            <a href="{{ url_for('choisir_niveau', niveau=niveau) }}" class="btn btn-outline-success btn-lg me-3">
-                🎯 Test complet {{ niveau.upper() }}
+            <a href="{{ url_for('test_trous') }}" class="btn btn-outline-warning btn-lg me-3">
+                ✏️ Tests à trous
             </a>
-            {% endif %}
             {% if session.admin_access %}
             <a href="{{ url_for('ressources') }}" class="btn btn-outline-secondary btn-lg">
                 📄 Consulter les ressources
@@ -111,4 +144,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    function supprimerTestsChapitres() {
+        if (confirm("Êtes-vous sûr de vouloir supprimer tous les tests de chapitres en cours ?")) {
+            fetch("{{ url_for('supprimer_tests_chapitre') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Une erreur est survenue lors de la suppression des tests.");
+                }
+            })
+            .catch(error => {
+                console.error("Erreur :", error);
+                alert("Une erreur est survenue lors de la suppression des tests.");
+            });
+        }
+    }
+</script>
 {% endblock %}

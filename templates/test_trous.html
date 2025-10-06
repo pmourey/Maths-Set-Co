@@ -6,6 +6,39 @@
         <div class="math-icon mb-4">📝</div>
         <h1 class="card-title mb-4">Tests à trous par niveau</h1>
         <p class="lead mb-5">Choisissez votre niveau pour commencer un test à trous</p>
+
+        <!-- Section pour les tests à trous en cours -->
+        {% set saved_tests_trous = [] %}
+        {% for key in session.keys() %}
+            {% if key.startswith('progress_trous_') %}
+                {% set _ = saved_tests_trous.append(session[key]) %}
+            {% endif %}
+        {% endfor %}
+
+        {% if saved_tests_trous %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="mb-0">📋 Tests à trous en cours</h5>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerTestsTrous()">
+                    🗑️ Supprimer ces tests
+                </button>
+            </div>
+            <p class="mb-3">Vous avez des tests à trous en cours de réalisation :</p>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                {% for test in saved_tests_trous %}
+                <div class="mb-2">
+                    <a href="{{ url_for('reprendre_test_trous', niveau=test.niveau) }}"
+                       class="btn btn-sm btn-outline-warning">
+                        ✏️ Reprendre Test à trous {{ test.niveau|upper }}
+                        <br><small>(Question {{ test.test_trous_index + 1 }})</small>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row g-3">
             {% for niveau in ['6eme', '5eme', '4eme', '3eme'] %}
             <div class="col-md-6">
@@ -23,6 +56,40 @@
             </div>
             {% endfor %}
         </div>
+
+        <!-- Boutons de navigation -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg me-3">
+                🏠 Retour à l'accueil
+            </a>
+            <a href="{{ url_for('chapitres') }}" class="btn btn-outline-success btn-lg">
+                📚 Tests par chapitre
+            </a>
+        </div>
     </div>
 </div>
+
+<script>
+    function supprimerTestsTrous() {
+        if (confirm("Êtes-vous sûr de vouloir supprimer tous les tests à trous en cours ?")) {
+            fetch("{{ url_for('supprimer_tests_trous') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Une erreur est survenue lors de la suppression des tests.");
+                }
+            })
+            .catch(error => {
+                console.error("Erreur :", error);
+                alert("Une erreur est survenue lors de la suppression des tests.");
+            });
+        }
+    }
+</script>
 {% endblock %}

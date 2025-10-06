@@ -7,6 +7,59 @@
         <h1 class="card-title mb-4">Tests de Mathématiques</h1>
         <p class="lead mb-5">Choisissez votre niveau de collège pour commencer le test</p>
 
+        <!-- Section pour les tests sauvegardés -->
+        {% set saved_tests = [] %}
+        {% set saved_tests_trous = [] %}
+        {% for key in session.keys() %}
+            {% if key.startswith('progress_') and not key.startswith('progress_trous_') %}
+                {% set _ = saved_tests.append(session[key]) %}
+            {% elif key.startswith('progress_trous_') %}
+                {% set _ = saved_tests_trous.append(session[key]) %}
+            {% endif %}
+        {% endfor %}
+
+        {% if saved_tests or saved_tests_trous %}
+        <div class="alert alert-info mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="mb-0">📋 Tests en cours</h5>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerTousTests()">
+                    🗑️ Supprimer tous
+                </button>
+            </div>
+            <p class="mb-3">Vous avez des tests en cours de réalisation :</p>
+
+            <!-- Tests QCM sauvegardés -->
+            {% for test in saved_tests %}
+            <div class="d-inline-block me-3 mb-2">
+                {% if test.mode == 'chapitre' %}
+                    <a href="{{ url_for('reprendre_test', niveau=test.niveau, chapitre=test.chapitre) }}"
+                       class="btn btn-sm btn-outline-success">
+                        📚 Reprendre QCM {{ test.niveau|upper }} - {{ test.chapitre }}
+                        (Question {{ test.question_courante + 1 }})
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('reprendre_test', niveau=test.niveau) }}"
+                       class="btn btn-sm btn-outline-success">
+                        📝 Reprendre QCM {{ test.niveau|upper }}
+                        (Question {{ test.question_courante + 1 }})
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Tests à trous sauvegardés -->
+            {% for test in saved_tests_trous %}
+            <div class="d-inline-block me-3 mb-2">
+                <a href="{{ url_for('reprendre_test_trous', niveau=test.niveau) }}"
+                   class="btn btn-sm btn-outline-warning">
+                    ✏️ Reprendre Test à trous {{ test.niveau|upper }}
+                    (Question {{ test.test_trous_index + 1 }})
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="card h-100 border-primary">
@@ -94,4 +147,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    function supprimerTousTests() {
+        if (confirm("Êtes-vous sûr de vouloir supprimer tous les tests en cours ?")) {
+            fetch("{{ url_for('supprimer_tous_tests') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Une erreur est survenue lors de la suppression des tests.");
+                }
+            })
+            .catch(error => {
+                console.error("Erreur :", error);
+                alert("Une erreur est survenue lors de la suppression des tests.");
+            });
+        }
+    }
+</script>
 {% endblock %}
