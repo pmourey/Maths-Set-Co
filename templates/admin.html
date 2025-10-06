@@ -33,14 +33,24 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">🛠️ Administration QCM</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#ajouterQuestionModal">
-                        ➕ Ajouter une question
-                    </button>
+                    <div class="btn-group me-2" role="group">
+                        <a href="{{ url_for('admin_editor') }}" class="btn btn-primary">
+                            ✏️ Éditeur MathML
+                        </a>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#ajouterQuestionModal">
+                            ➕ Ajouter une question
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="mb-3">
+                <div class="alert alert-info">
+                    <strong>💡 Astuce :</strong> Utilisez l'<a href="{{ url_for('admin_editor') }}" class="alert-link">Éditeur MathML</a>
+                    pour créer facilement des questions avec des formules mathématiques professionnelles !
+                </div>
                 <a href="{{ url_for('index') }}" class="btn btn-secondary">Retour à l'accueil</a>
+                <a href="{{ url_for('demo_mathml') }}" class="btn btn-info">📚 Guide MathML</a>
             </div>
 
             <div class="tab-content">

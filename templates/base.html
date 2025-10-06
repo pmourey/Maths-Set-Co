@@ -15,6 +15,309 @@
     {% endblock %}
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Support MathML avec fallback MathJax -->
+    <script>
+        // Détection du support MathML natif
+        window.mathMLSupported = (function() {
+            var div = document.createElement('div');
+            div.innerHTML = '<math><mspace height="23px" width="77px"/></math>';
+            return div.firstChild && div.firstChild.firstChild &&
+                   div.firstChild.firstChild.getBoundingClientRect().height > 19;
+        })();
+
+        // Si MathML n'est pas supporté nativement, charger MathJax
+        if (!window.mathMLSupported) {
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                },
+                mathml: {
+                    displayMath: [['\\[', '\\]']],
+                    inlineMath: [['\\(', '\\)']]
+                },
+                svg: {
+                    fontCache: 'global'
+                }
+            };
+
+            var script = document.createElement('script');
+            script.src = 'https://polyfill.io/v3/polyfill.min.js?features=es6';
+            document.head.appendChild(script);
+
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/mml-chtml.js';
+            document.head.appendChild(mathjax);
+        }
+    </script>
+
+    <!-- CKEditor 5 (Open Source) avec support MathML -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    <style>
+        .ck-editor__editable {
+            min-height: 200px;
+        }
+        .math-toolbar {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .math-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .math-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+
+    <script>
+        // Configuration globale pour CKEditor avec support MathML
+        window.editorInstances = {};
+
+        function initMathEditor(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element || window.editorInstances[elementId]) return;
+
+            // Créer la barre d'outils mathématiques
+            const mathToolbar = document.createElement('div');
+            mathToolbar.className = 'math-toolbar';
+            mathToolbar.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 5px;">Formules mathématiques :</div>
+                <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'frac')">Fraction</button>
+                <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'pow')">Puissance</button>
+                <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'sqrt')">Racine</button>
+                <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'root')">Racine n-ième</button>
+                <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'var')">Variable</button>
+                <button type="button" class="math-btn" onclick="showMathDialog('${elementId}')">Guide complet</button>
+            `;
+            element.parentNode.insertBefore(mathToolbar, element);
+
+            ClassicEditor
+                .create(element, {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'undo', 'redo'
+                    ],
+                    heading: {
+                        options: [
+                            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' }
+                        ]
+                    }
+                })
+                .then(editor => {
+                    window.editorInstances[elementId] = editor;
+
+                    // Charger le contenu initial s'il existe
+                    const initialContent = element.value || element.textContent;
+                    if (initialContent) {
+                        editor.setData(convertNotationToMathML(initialContent));
+                    }
+
+                    // Synchroniser avec le textarea lors des changements
+                    editor.model.document.on('change:data', () => {
+                        const content = editor.getData();
+                        const convertedContent = convertMathMLToNotation(content);
+                        element.value = convertedContent;
+
+                        // Déclencher l'événement change pour la sauvegarde automatique
+                        element.dispatchEvent(new Event('change'));
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur lors de l\'initialisation de CKEditor:', error);
+                });
+        }
+
+        function insertMath(editorId, type) {
+            const editor = window.editorInstances[editorId];
+            if (!editor) return;
+
+            let mathText = '';
+
+            switch(type) {
+                case 'frac':
+                    mathText = '[frac:3/4]';
+                    break;
+                case 'pow':
+                    mathText = '[pow:x^2]';
+                    break;
+                case 'sqrt':
+                    mathText = '[sqrt:16]';
+                    break;
+                case 'root':
+                    mathText = '[root:8,3]';
+                    break;
+                case 'var':
+                    mathText = '[var:x_1]';
+                    break;
+            }
+
+            editor.model.change(writer => {
+                const insertPosition = editor.model.document.selection.getFirstPosition();
+                writer.insertText(mathText, insertPosition);
+            });
+        }
+
+        function showMathDialog(editorId) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h4>🧮 Guide des formules mathématiques</h4>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h5>📝 Syntaxes disponibles :</h5>
+                        <div style="font-family: monospace; background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <div style="margin: 8px 0;"><strong>Fractions :</strong> [frac:3/4] → ¾</div>
+                            <div style="margin: 8px 0;"><strong>Puissances :</strong> [pow:x^2] → x²</div>
+                            <div style="margin: 8px 0;"><strong>Racines :</strong> [sqrt:16] → √16</div>
+                            <div style="margin: 8px 0;"><strong>Racines n-ièmes :</strong> [root:8,3] → ∛8</div>
+                            <div style="margin: 8px 0;"><strong>Variables :</strong> [var:x_1] → x₁</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="formula-input" style="font-weight: bold;">Tapez votre formule :</label>
+                        <textarea id="formula-input" style="width: 100%; height: 80px; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Exemple: Calculer [frac:3/4] + [pow:x^2]"></textarea>
+
+                        <div style="margin: 10px 0;">
+                            <strong>Aperçu :</strong>
+                            <div id="formula-preview" style="border: 1px solid #ddd; padding: 15px; background: white; min-height: 50px; border-radius: 4px;">
+                                <em>Tapez une formule ci-dessus...</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px; cursor: pointer;">Annuler</button>
+                        <button onclick="insertFormulaFromDialog('${editorId}')" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Insérer</button>
+                    </div>
+                </div>
+            `;
+
+            modal.className = 'modal-overlay';
+            document.body.appendChild(modal);
+
+            // Aperçu en temps réel
+            const input = modal.querySelector('#formula-input');
+            const preview = modal.querySelector('#formula-preview');
+
+            input.addEventListener('input', function() {
+                const converted = convertNotationToMathML(this.value);
+                preview.innerHTML = converted || '<em>Tapez une formule...</em>';
+            });
+
+            input.focus();
+        }
+
+        function insertFormulaFromDialog(editorId) {
+            const modal = document.querySelector('.modal-overlay');
+            const input = modal.querySelector('#formula-input');
+            const editor = window.editorInstances[editorId];
+
+            if (editor && input.value.trim()) {
+                editor.model.change(writer => {
+                    const insertPosition = editor.model.document.selection.getFirstPosition();
+                    writer.insertText(input.value, insertPosition);
+                });
+            }
+
+            modal.remove();
+        }
+
+        // Fonctions de conversion (identiques à TinyMCE)
+        function convertNotationToMathML(text) {
+            if (!text) return text;
+
+            return text
+                .replace(/\[frac:([^\]]+)\]/g, function(match, frac) {
+                    if (frac.includes('/')) {
+                        const [num, den] = frac.split('/');
+                        return `<math class="math-inline"><mfrac><mn>${num.trim()}</mn><mn>${den.trim()}</mn></mfrac></math>`;
+                    }
+                    return match;
+                })
+                .replace(/\[pow:([^\]]+)\]/g, function(match, expr) {
+                    if (expr.includes('^')) {
+                        const [base, exp] = expr.split('^');
+                        return `<math class="math-inline"><msup><mn>${base.trim()}</mn><mn>${exp.trim()}</mn></msup></math>`;
+                    }
+                    return match;
+                })
+                .replace(/\[sqrt:([^\]]+)\]/g, function(match, value) {
+                    return `<math class="math-inline"><msqrt><mn>${value.trim()}</mn></msqrt></math>`;
+                })
+                .replace(/\[root:([^\]]+)\]/g, function(match, values) {
+                    const parts = values.split(',');
+                    if (parts.length === 2) {
+                        const [radicande, indice] = parts;
+                        return `<math class="math-inline"><mroot><mn>${radicande.trim()}</mn><mn>${indice.trim()}</mn></mroot></math>`;
+                    }
+                    return match;
+                })
+                .replace(/\[var:([^\]]+)\]/g, function(match, variable) {
+                    if (variable.includes('_')) {
+                        const [nom, indice] = variable.split('_');
+                        return `<math class="math-inline"><msub><mi>${nom.trim()}</mi><mn>${indice.trim()}</mn></msub></math>`;
+                    } else {
+                        return `<math class="math-inline"><mi>${variable.trim()}</mi></math>`;
+                    }
+                });
+        }
+
+        function convertMathMLToNotation(html) {
+            if (!html) return html;
+
+            return html
+                .replace(/<math[^>]*><mfrac><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mfrac><\/math>/g, '[frac:$1/$2]')
+                .replace(/<math[^>]*><msup><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/msup><\/math>/g, '[pow:$1^$2]')
+                .replace(/<math[^>]*><msqrt><mn>([^<]+)<\/mn><\/msqrt><\/math>/g, '[sqrt:$1]')
+                .replace(/<math[^>]*><mroot><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mroot><\/math>/g, '[root:$1,$2]')
+                .replace(/<math[^>]*><msub><mi>([^<]+)<\/mi><mn>([^<]+)<\/mn><\/msub><\/math>/g, '[var:$1_$2]')
+                .replace(/<math[^>]*><mi>([^<]+)<\/mi><\/math>/g, '[var:$1]');
+        }
+
+        // Initialisation automatique des éditeurs au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser tous les éléments avec la classe 'math-editor'
+            document.querySelectorAll('.math-editor').forEach(function(element) {
+                if (element.id) {
+                    // Délai pour s'assurer que la page est complètement chargée
+                    setTimeout(() => initMathEditor(element.id), 100);
+                }
+            });
+        });
+    </script>
+
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -37,6 +340,36 @@
         .math-icon {
             font-size: 3rem;
             color: #667eea;
+        }
+
+        /* Styles pour les formules mathématiques */
+        .math-content {
+            line-height: 1.6;
+        }
+
+        .math-content math {
+            font-size: 1.1em;
+        }
+
+        .math-inline {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .math-display {
+            display: block;
+            text-align: center;
+            margin: 1em 0;
+        }
+
+        /* Amélioration de l'affichage des fractions */
+        .math-content mfrac {
+            font-size: 0.9em;
+        }
+
+        /* Style pour les exposants et indices */
+        .math-content msup, .math-content msub {
+            font-size: 0.8em;
         }
     </style>
 

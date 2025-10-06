@@ -62,8 +62,8 @@
     <div class="card-body p-5">
         <div class="mb-4">
             <h4 class="text-primary mb-3">📝 Problème à résoudre :</h4>
-            <div class="alert alert-light border-start border-primary border-4 fs-5">
-                {{ question.probleme }}
+            <div class="alert alert-light border-start border-primary border-4 fs-5 math-content">
+                {{ question.probleme|mathml|safe }}
             </div>
         </div>
 
@@ -75,9 +75,9 @@
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="radio" name="reponse"
                            id="option{{ i }}" value="{{ i }}" required>
-                    <label class="form-check-label fs-6" for="option{{ i }}">
+                    <label class="form-check-label fs-6 math-content" for="option{{ i }}">
                         <span class="badge bg-light text-dark me-2">{{ ['A', 'B', 'C', 'D'][i] }}</span>
-                        {{ question.options[i] }}
+                        {{ question.options[i]|mathml|safe }}
                     </label>
                 </div>
                 {% endfor %}

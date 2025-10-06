@@ -7,8 +7,12 @@ import time
 
 from models import db, Niveau, Chapitre, Question, QuestionsATrous
 from services import QCMService
+from mathml_utils import mathml_filter, generate_mathml_examples
 
 app = Flask(__name__, static_folder='static')
+
+# Enregistrer le filtre MathML
+app.jinja_env.filters['mathml'] = mathml_filter
 
 load_dotenv(os.path.join(app.instance_path, '.env'))  # charge le fichier .env dans le dossier instance/
 # Clé secrète pour les sessions (chargée depuis .env)
@@ -1001,6 +1005,19 @@ def supprimer_tests_trous():
         return {'success': True, 'message': 'Tests à trous en cours supprimés'}
     except Exception as e:
         return {'success': False, 'error': str(e)}, 400
+
+@app.route('/admin/editor')
+@login_required
+@qcm_admin_required
+def admin_editor():
+    """Page d'édition de questions avec éditeur WYSIWYG et support MathML"""
+    return render_template('admin_editor.html')
+
+@app.route('/demo-mathml')
+def demo_mathml():
+    """Page de démonstration des fonctionnalités MathML"""
+    examples = generate_mathml_examples()
+    return render_template('demo_mathml.html', examples=examples)
 
 if __name__ == '__main__':
     app.run(debug=True)
