@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Démonstration MathML - Tests de Mathématiques{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h3 class="mb-0">🧮 Démonstration MathML - Guide d'utilisation</h3>
+    </div>
+
+    <div class="card-body">
+        <div class="alert alert-info">
+            <h5>📚 Comment utiliser MathML dans vos énoncés</h5>
+            <p>Utilisez les notations suivantes dans vos énoncés de questions pour afficher des formules mathématiques :</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>🔢 Fractions</h4>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Syntaxe :</h6>
+                        <code>[frac:3/4]</code>
+
+                        <h6 class="mt-3">Résultat :</h6>
+                        <div class="math-content border p-3 bg-light">
+                            {{ examples.fraction.output }}
+                        </div>
+
+                        <h6 class="mt-3">Exemple d'énoncé :</h6>
+                        <div class="alert alert-light math-content">
+                            {{ examples.fraction.input|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h4>📐 Puissances</h4>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Syntaxe :</h6>
+                        <code>[pow:x^2]</code>
+
+                        <h6 class="mt-3">Résultat :</h6>
+                        <div class="math-content border p-3 bg-light">
+                            {{ examples.puissance.output }}
+                        </div>
+
+                        <h6 class="mt-3">Exemple d'énoncé :</h6>
+                        <div class="alert alert-light math-content">
+                            {{ examples.puissance.input|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>√ Racines</h4>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Racine carrée :</h6>
+                        <code>[sqrt:16]</code>
+
+                        <h6 class="mt-2">Racine n-ième :</h6>
+                        <code>[root:8,3]</code> <small>(racine cubique de 8)</small>
+
+                        <h6 class="mt-3">Exemple d'énoncé :</h6>
+                        <div class="alert alert-light math-content">
+                            {{ examples.racine.input|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h4>📊 Variables avec indices</h4>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Syntaxe :</h6>
+                        <code>[var:x_1]</code> <small>(x avec indice 1)</small><br>
+                        <code>[var:y]</code> <small>(variable simple)</small>
+
+                        <h6 class="mt-3">Exemple d'énoncé :</h6>
+                        <div class="alert alert-light math-content">
+                            {{ examples.variable.input|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-light mb-4">
+            <div class="card-body">
+                <h4>🎯 Exemples d'énoncés complets</h4>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 1 - Géométrie :</h6>
+                        <div class="alert alert-warning math-content">
+                            {{ "Un rectangle a pour longueur [frac:7/2] cm et pour largeur [frac:3/4] cm. Calculer son aire."|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 2 - Algèbre :</h6>
+                        <div class="alert alert-warning math-content">
+                            {{ "Résoudre l'équation [pow:x^2] + 3x = 10. Donner les solutions sous forme de fraction."|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 3 - Calcul numérique :</h6>
+                        <div class="alert alert-warning math-content">
+                            {{ "Simplifier l'expression : [sqrt:64] + [root:27,3] - [frac:1/2]"|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 4 - Variables :</h6>
+                        <div class="alert alert-warning math-content">
+                            {{ "Si [var:a_1] = 5, [var:a_2] = 3 et [var:a_3] = [pow:2^3], calculer [var:a_1] + [var:a_2] + [var:a_3]"|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">✅ Avantages de MathML pour votre plateforme</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>🎨 Rendu professionnel</h6>
+                        <p>Les formules s'affichent avec la qualité typographique des manuels scolaires.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>♿ Accessibilité</h6>
+                        <p>MathML est lu par les lecteurs d'écran, rendant vos tests accessibles aux malvoyants.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>📱 Compatible</h6>
+                        <p>Fonctionne sur tous les navigateurs modernes avec fallback automatique via MathJax.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>🔍 SEO optimisé</h6>
+                        <p>Le contenu mathématique reste indexable par les moteurs de recherche.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>⚡ Performant</h6>
+                        <p>Rendu natif quand supporté, sinon fallback intelligent avec MathJax.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>✏️ Facile à utiliser</h6>
+                        <p>Syntaxe simple et intuitive pour créer des formules complexes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                ← Retour à l'accueil
+            </a>
+            {% if session.get('qcm_admin_access') or session.get('admin_access') %}
+            <a href="{{ url_for('admin') }}" class="btn btn-success btn-lg ms-3">
+                Administration QCM →
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Vérifier le support MathML et afficher un message si nécessaire
+document.addEventListener('DOMContentLoaded', function() {
+    if (!window.mathMLSupported) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-info mt-3';
+        alert.innerHTML = '<strong>ℹ️ Info :</strong> Votre navigateur utilise MathJax pour afficher les formules mathématiques.';
+        document.querySelector('.card-body').appendChild(alert);
+    } else {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success mt-3';
+        alert.innerHTML = '<strong>✅ Excellent :</strong> Votre navigateur supporte MathML nativement !';
+        document.querySelector('.card-body').appendChild(alert);
+    }
+});
+</script>
+{% endblock %}

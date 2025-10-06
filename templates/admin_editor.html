@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Éditeur de Questions - Administration QCM{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h3 class="mb-0">📝 Éditeur de Questions avec Support MathML</h3>
+    </div>
+
+    <div class="card-body">
+        <!-- Formulaire d'ajout/modification de question -->
+        <form id="questionForm" method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="niveau" class="form-label">Niveau *</label>
+                        <select class="form-select" id="niveau" name="niveau" required>
+                            <option value="">Sélectionnez un niveau</option>
+                            <option value="6eme">6ème</option>
+                            <option value="5eme">5ème</option>
+                            <option value="4eme">4ème</option>
+                            <option value="3eme">3ème</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="chapitre" class="form-label">Chapitre *</label>
+                        <select class="form-select" id="chapitre" name="chapitre" required>
+                            <option value="">Sélectionnez d'abord un niveau</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="probleme" class="form-label">Énoncé du problème *</label>
+                <textarea class="form-control math-editor" id="probleme" name="probleme" rows="6" required
+                          placeholder="Saisissez l'énoncé du problème. Utilisez le bouton 'Math' pour insérer des formules."></textarea>
+                <div class="form-text">
+                    Utilisez l'éditeur pour formater votre texte et insérer des formules mathématiques.
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_a" class="form-label">Option A *</label>
+                        <textarea class="form-control math-editor" id="option_a" name="option_a" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_b" class="form-label">Option B *</label>
+                        <textarea class="form-control math-editor" id="option_b" name="option_b" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_c" class="form-label">Option C *</label>
+                        <textarea class="form-control math-editor" id="option_c" name="option_c" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_d" class="form-label">Option D *</label>
+                        <textarea class="form-control math-editor" id="option_d" name="option_d" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="reponse_correcte" class="form-label">Réponse correcte *</label>
+                        <select class="form-select" id="reponse_correcte" name="reponse_correcte" required>
+                            <option value="">Choisissez la bonne réponse</option>
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="difficulte" class="form-label">Difficulté *</label>
+                        <select class="form-select" id="difficulte" name="difficulte" required>
+                            <option value="">Sélectionnez la difficulté</option>
+                            <option value="facile">Facile</option>
+                            <option value="moyen">Moyen</option>
+                            <option value="difficile">Difficile</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="explication" class="form-label">Explication (optionnel)</label>
+                <textarea class="form-control math-editor" id="explication" name="explication" rows="4"
+                          placeholder="Explication détaillée de la solution (optionnel)"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-info" onclick="previewQuestion()">
+                        👁️ Aperçu
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        🔄 Réinitialiser
+                    </button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{{ url_for('admin') }}'">
+                        ← Retour à l'admin
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        💾 Enregistrer la question
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Zone d'aperçu -->
+        <div id="preview-section" class="mt-5" style="display: none;">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📋 Aperçu de la question</h5>
+                </div>
+                <div class="card-body">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialiser CKEditor pour tous les éditeurs
+document.addEventListener('DOMContentLoaded', function() {
+    // Charger les chapitres au changement de niveau
+    document.getElementById('niveau').addEventListener('change', loadChapitres);
+
+    // Initialiser les éditeurs après un délai pour s'assurer que CKEditor est prêt
+    setTimeout(function() {
+        document.querySelectorAll('.math-editor').forEach(function(element) {
+            if (element.id) {
+                initMathEditor(element.id);
+            }
+        });
+    }, 500);
+});
+
+// Charger les chapitres selon le niveau sélectionné
+function loadChapitres() {
+    const niveau = document.getElementById('niveau').value;
+    const chapitreSelect = document.getElementById('chapitre');
+
+    if (!niveau) {
+        chapitreSelect.innerHTML = '<option value="">Sélectionnez d\'abord un niveau</option>';
+        return;
+    }
+
+    // Afficher le chargement
+    chapitreSelect.innerHTML = '<option value="">Chargement des chapitres...</option>';
+
+    // Appel AJAX pour récupérer les chapitres
+    fetch(`/admin/api/chapitres/${niveau}`)
+        .then(response => response.json())
+        .then(data => {
+            chapitreSelect.innerHTML = '<option value="">Sélectionnez un chapitre</option>';
+
+            if (data.chapitres && data.chapitres.length > 0) {
+                data.chapitres.forEach(chapitre => {
+                    const option = document.createElement('option');
+                    option.value = chapitre.nom;
+                    option.textContent = chapitre.titre;
+                    chapitreSelect.appendChild(option);
+                });
+            } else {
+                chapitreSelect.innerHTML = '<option value="">Aucun chapitre disponible</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des chapitres:', error);
+            chapitreSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        });
+}
+
+// Aperçu de la question
+function previewQuestion() {
+    const formData = new FormData(document.getElementById('questionForm'));
+    const data = {};
+
+    // Récupérer le contenu des éditeurs CKEditor
+    Object.keys(window.editorInstances).forEach(editorId => {
+        const editor = window.editorInstances[editorId];
+        if (editor) {
+            // Récupérer le contenu et le convertir en MathML pour l'aperçu
+            const rawContent = editor.getData();
+            data[editorId] = convertNotationToMathML(rawContent);
+        }
+    });
+
+    // Compléter avec les autres champs
+    for (let [key, value] of formData.entries()) {
+        if (!data[key]) {
+            data[key] = value;
+        }
+    }
+
+    // Générer l'aperçu avec le contenu converti
+    const previewContent = `
+        <div class="mb-4">
+            <h6 class="text-primary">📝 Problème :</h6>
+            <div class="alert alert-light math-content">${data.probleme || '<em>Énoncé vide</em>'}</div>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="text-secondary">Choix de réponses :</h6>
+            <div class="list-group">
+                <div class="list-group-item math-content">
+                    <strong>A.</strong> ${data.option_a || '<em>Option A vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>B.</strong> ${data.option_b || '<em>Option B vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>C.</strong> ${data.option_c || '<em>Option C vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>D.</strong> ${data.option_d || '<em>Option D vide</em>'}
+                </div>
+            </div>
+        </div>
+
+        ${data.explication ? `
+            <div class="mb-4">
+                <h6 class="text-info">💡 Explication :</h6>
+                <div class="alert alert-info math-content">${data.explication}</div>
+            </div>
+        ` : ''}
+
+        <div class="row">
+            <div class="col-md-4">
+                <strong>Niveau :</strong> ${data.niveau || 'Non défini'}
+            </div>
+            <div class="col-md-4">
+                <strong>Chapitre :</strong> ${data.chapitre || 'Non défini'}
+            </div>
+            <div class="col-md-4">
+                <strong>Difficulté :</strong> ${data.difficulte || 'Non définie'}
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <span class="badge ${data.reponse_correcte !== '' ? 'bg-success' : 'bg-warning'}">
+                Réponse correcte : ${data.reponse_correcte !== '' ? ['A', 'B', 'C', 'D'][parseInt(data.reponse_correcte)] : 'Non définie'}
+            </span>
+        </div>
+    `;
+
+    // Injecter le contenu dans l'aperçu
+    document.getElementById('preview-content').innerHTML = previewContent;
+    document.getElementById('preview-section').style.display = 'block';
+
+    // Traiter MathJax si nécessaire pour le rendu des nouvelles formules
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([document.getElementById('preview-content')])
+            .catch(function (err) {
+                console.log('MathJax error:', err);
+            });
+    }
+
+    // Faire défiler vers l'aperçu
+    document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Réinitialiser le formulaire
+function resetForm() {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ? Toutes les données non sauvegardées seront perdues.')) {
+        document.getElementById('questionForm').reset();
+
+        // Réinitialiser les éditeurs CKEditor
+        Object.keys(window.editorInstances).forEach(editorId => {
+            const editor = window.editorInstances[editorId];
+            if (editor) {
+                editor.setData('');
+            }
+        });
+
+        document.getElementById('preview-section').style.display = 'none';
+
+        // Supprimer les brouillons
+        ['probleme', 'option_a', 'option_b', 'option_c', 'option_d', 'explication'].forEach(id => {
+            localStorage.removeItem('draft_' + id);
+        });
+    }
+}
+
+// Soumission du formulaire
+document.getElementById('questionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Récupérer les données des éditeurs CKEditor
+    const formData = {
+        niveau: document.getElementById('niveau').value,
+        chapitre: document.getElementById('chapitre').value,
+        reponse_correcte: document.getElementById('reponse_correcte').value,
+        difficulte: document.getElementById('difficulte').value
+    };
+
+    // Ajouter le contenu des éditeurs
+    Object.keys(window.editorInstances).forEach(editorId => {
+        const editor = window.editorInstances[editorId];
+        if (editor) {
+            formData[editorId] = editor.getData();
+        }
+    });
+
+    // Validation
+    const requiredFields = ['niveau', 'chapitre', 'probleme', 'option_a', 'option_b', 'option_c', 'option_d', 'reponse_correcte', 'difficulte'];
+    const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+
+    if (missingFields.length > 0) {
+        alert('Veuillez remplir tous les champs obligatoires : ' + missingFields.join(', '));
+        return;
+    }
+
+    // Envoyer les données
+    fetch('/admin/api/question', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Question enregistrée avec succès !');
+            // Supprimer les brouillons
+            ['probleme', 'option_a', 'option_b', 'option_c', 'option_d', 'explication'].forEach(id => {
+                localStorage.removeItem('draft_' + id);
+            });
+            // Réinitialiser le formulaire
+            document.getElementById('questionForm').reset();
+            Object.keys(window.editorInstances).forEach(editorId => {
+                const editor = window.editorInstances[editorId];
+                if (editor) {
+                    editor.setData('');
+                }
+            });
+            document.getElementById('preview-section').style.display = 'none';
+        } else {
+            alert('Erreur lors de l\'enregistrement : ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de communication avec le serveur.');
+    });
+});
+</script>
+{% endblock %}
