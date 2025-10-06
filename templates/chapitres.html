@@ -2,6 +2,52 @@
 
 {% block title %}{{ titre_niveau if titre_niveau else 'Chapitres' }} - Tests de Mathématiques{% endblock %}
 
+{% block canonical %}
+{% if niveau %}
+<link rel="canonical" href="https://mathsetco.eu.pythonanywhere.com/chapitres/{{ niveau }}" />
+{% else %}
+<link rel="canonical" href="https://mathsetco.eu.pythonanywhere.com/chapitres" />
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if niveau %}
+<meta name="description" content="Tests de mathématiques par chapitre {{ niveau|upper }} - QCM ciblés selon le programme officiel du collège. Exercices avec corrections détaillées." />
+{% else %}
+<meta name="description" content="Tests de mathématiques par chapitre pour tous niveaux collège (6ème à 3ème) - QCM ciblés par thématiques avec corrections." />
+{% endif %}
+{% endblock %}
+
+{% block og_title %}{% if niveau %}Tests par Chapitre {{ niveau|upper }}{% else %}Tests par Chapitre - Collège{% endif %} | MathπSet🎾&Co{% endblock %}
+{% block og_description %}{% if niveau %}QCM de mathématiques {{ niveau|upper }} organisés par chapitre{% else %}Tests de mathématiques organisés par chapitre pour le collège{% endif %} - Programme officiel avec corrections{% endblock %}
+
+{% block twitter_title %}{% if niveau %}Tests Chapitres {{ niveau|upper }}{% else %}Tests par Chapitre{% endif %} | Maths Collège{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "{% if niveau %}Tests par Chapitre {{ niveau|upper }}{% else %}Tests de Mathématiques par Chapitre{% endif %}",
+  "description": "{% if niveau %}QCM de mathématiques {{ niveau|upper }} organisés par chapitre selon le programme officiel{% else %}Tests de mathématiques organisés par chapitre pour tous niveaux collège{% endif %}",
+  {% if niveau %}"educationalLevel": "{{ niveau }}",{% endif %}
+  "courseMode": "online",
+  "learningResourceType": "Quiz",
+  "inLanguage": "fr",
+  "provider": {
+    "@type": "EducationalOrganization",
+    "name": "MathπSet&Co",
+    "url": "https://mathsetco.eu.pythonanywhere.com/"
+  },
+  "about": {
+    "@type": "Thing",
+    "name": "Mathématiques",
+    "description": "{% if niveau %}Mathématiques niveau {{ niveau }} par chapitre{% else %}Mathématiques collège par chapitre{% endif %}"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <div class="card-body text-center p-5">

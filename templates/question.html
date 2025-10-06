@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Question {{ question_num }}/{{ total_questions }} - {{ niveau|upper }}{% endblock %}
+{% block title %}{{ contexte }} - Question {{ question_num }}/{{ total_questions }} - Tests de Mathématiques{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="https://mathsetco.eu.pythonanywhere.com/niveau/{{ niveau }}" />
+{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Test de mathématiques {{ niveau|upper }} - Question {{ question_num }} sur {{ total_questions }}. QCM interactif avec corrections détaillées pour le collège." />
+{% endblock %}
+
+{% block og_title %}Test de Mathématiques {{ niveau|upper }} | MathπSet🎾&Co{% endblock %}
+{% block og_description %}QCM de mathématiques niveau {{ niveau|upper }} avec corrections détaillées - Question {{ question_num }}/{{ total_questions }}{% endblock %}
+
+{% block twitter_title %}Test Maths {{ niveau|upper }} - Question {{ question_num }}/{{ total_questions }}{% endblock %}
+{% block twitter_description %}QCM interactif de mathématiques niveau {{ niveau|upper }} avec corrections{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Quiz",
+  "name": "Test de Mathématiques {{ niveau|upper }}",
+  "description": "QCM de mathématiques niveau {{ niveau|upper }} avec corrections détaillées",
+  "educationalLevel": "{{ niveau }}",
+  "learningResourceType": "Quiz",
+  "interactivityType": "active",
+  "typicalAgeRange": "{% if niveau == '6eme' %}11-12{% elif niveau == '5eme' %}12-13{% elif niveau == '4eme' %}13-14{% else %}14-15{% endif %}",
+  "inLanguage": "fr",
+  "provider": {
+    "@type": "EducationalOrganization",
+    "name": "MathπSet&Co",
+    "url": "https://mathsetco.eu.pythonanywhere.com/"
+  },
+  "about": {
+    "@type": "Thing",
+    "name": "Mathématiques",
+    "description": "Mathématiques niveau collège {{ niveau }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="card">

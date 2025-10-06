@@ -26,6 +26,57 @@ app.permanent_session_lifetime = timedelta(days=30)  # Session valide 30 jours
 ADMIN_PWD = os.getenv('ADMIN_PWD')
 QCM_ADMIN_PWD = os.getenv('QCM_ADMIN_PWD')
 
+# Fonction utilitaire pour les URLs canoniques (SEO)
+def get_canonical_url(endpoint=None, **values):
+    """
+    Génère l'URL canonique pour une page donnée.
+    Évite les problèmes de contenu dupliqué en définissant une version canonique.
+    """
+    base_url = "https://mathsetco.eu.pythonanywhere.com"
+
+    # Définir les URLs canoniques pour chaque type de page
+    canonical_rules = {
+        'index': '/',
+        'choisir_niveau': '/niveau/{niveau}',
+        'question': '/niveau/{niveau}',  # Questions pointent vers la page niveau
+        'resultats': '/niveau/{niveau}',  # Résultats pointent vers la page niveau
+        'ressources': '/ressources',
+        'login_ressources': '/login_ressources',
+    }
+
+    if endpoint and endpoint in canonical_rules:
+        # Utiliser la règle canonique définie
+        canonical_path = canonical_rules[endpoint]
+        if values:
+            canonical_path = canonical_path.format(**values)
+        return base_url + canonical_path
+
+    # Fallback : utiliser l'URL courante nettoyée
+    if endpoint:
+        try:
+            path = url_for(endpoint, **values)
+            return base_url + path
+        except:
+            pass
+
+    return base_url + request.path
+
+@app.context_processor
+def inject_canonical_url():
+    """
+    Injecte automatiquement l'URL canonique dans tous les templates.
+    """
+    endpoint = request.endpoint
+    view_args = request.view_args or {}
+
+    # Pour les pages de questions/résultats, utiliser l'URL du niveau
+    if endpoint in ['question', 'resultats'] and session.get('niveau'):
+        canonical_url = get_canonical_url('choisir_niveau', niveau=session['niveau'])
+    else:
+        canonical_url = get_canonical_url(endpoint, **view_args)
+
+    return {'canonical_url': canonical_url}
+
 # Décorateur pour accès admin
 def admin_required(f):
     @wraps(f)

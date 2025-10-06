@@ -1,5 +1,53 @@
 {% extends "base.html" %}
 
+{% block title %}Tests de Mathématiques Collège - QCM Interactifs 6ème à 3ème | MathπSet🎾&Co{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="https://mathsetco.eu.pythonanywhere.com/" />
+{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Tests de mathématiques gratuits pour le collège : QCM interactifs, tests par chapitre et tests à trous. Niveaux 6ème, 5ème, 4ème, 3ème avec corrections détaillées. Sauvegarde de progression." />
+{% endblock %}
+
+{% block og_title %}Tests de Mathématiques Collège - QCM Gratuits | MathπSet🎾&Co{% endblock %}
+{% block og_description %}Plateforme gratuite de tests de mathématiques pour le collège. QCM interactifs, tests par chapitre, corrections détaillées. Niveaux 6ème à 3ème.{% endblock %}
+
+{% block twitter_title %}Tests Maths Collège Gratuits - QCM 6ème à 3ème{% endblock %}
+{% block twitter_description %}Tests de mathématiques gratuits avec corrections pour le collège. QCM interactifs par niveau et chapitre.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MathπSet&Co - Tests de Mathématiques Collège",
+  "url": "https://mathsetco.eu.pythonanywhere.com/",
+  "description": "Plateforme gratuite de tests de mathématiques pour le collège avec QCM interactifs, tests par chapitre et corrections détaillées",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://mathsetco.eu.pythonanywhere.com/niveau/{search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "provider": {
+    "@type": "EducationalOrganization",
+    "name": "MathπSet&Co",
+    "url": "https://mathsetco.eu.pythonanywhere.com/"
+  },
+  "mainEntity": {
+    "@type": "Course",
+    "name": "Tests de Mathématiques Collège",
+    "description": "Tests interactifs de mathématiques pour tous niveaux collège",
+    "educationalLevel": ["6ème", "5ème", "4ème", "3ème"],
+    "courseMode": "online",
+    "learningResourceType": ["Quiz", "Exercise"],
+    "inLanguage": "fr",
+    "isAccessibleForFree": true
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <div class="card-body text-center p-5">

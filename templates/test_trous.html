@@ -1,5 +1,53 @@
 {% extends "base.html" %}
 
+{% block title %}Tests à Trous - Mathématiques Collège Interactifs | MathπSet🎾&Co{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="https://mathsetco.eu.pythonanywhere.com/test_trous" />
+{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Tests à trous interactifs de mathématiques pour le collège. Glisser-déposer, exercices de complétion par niveau (6ème, 5ème, 4ème, 3ème). Gratuit avec corrections." />
+{% endblock %}
+
+{% block og_title %}Tests à Trous - Mathématiques Collège | MathπSet🎾&Co{% endblock %}
+{% block og_description %}Exercices à trous interactifs de mathématiques pour le collège. Interface glisser-déposer intuitive, tous niveaux 6ème à 3ème.{% endblock %}
+
+{% block twitter_title %}Tests à Trous Maths Collège - Exercices Interactifs{% endblock %}
+{% block twitter_description %}Tests à trous de mathématiques avec interface glisser-déposer. Niveaux 6ème à 3ème, gratuit avec corrections.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LearningResource",
+  "name": "Tests à Trous - Mathématiques Collège",
+  "description": "Tests à trous interactifs de mathématiques pour le collège avec interface glisser-déposer",
+  "educationalLevel": ["6ème", "5ème", "4ème", "3ème"],
+  "learningResourceType": "Exercise",
+  "interactivityType": "active",
+  "educationalUse": "practice",
+  "inLanguage": "fr",
+  "isAccessibleForFree": true,
+  "provider": {
+    "@type": "EducationalOrganization",
+    "name": "MathπSet&Co",
+    "url": "https://mathsetco.eu.pythonanywhere.com/"
+  },
+  "about": {
+    "@type": "Thing",
+    "name": "Mathématiques",
+    "description": "Exercices à trous de mathématiques pour le collège"
+  },
+  "teaches": [
+    "Complétion d'exercices mathématiques",
+    "Vocabulaire mathématique",
+    "Formules et théorèmes"
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <div class="card-body text-center p-5">
