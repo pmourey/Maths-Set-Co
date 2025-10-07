@@ -15,6 +15,8 @@
     {% endblock %}
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- Support MathML avec fallback MathJax -->
     <script>
@@ -254,68 +256,358 @@
             modal.remove();
         }
 
-        // Fonctions de conversion (identiques à TinyMCE)
+        // Fonctions de conversion améliorées pour les expressions imbriquées
         function convertNotationToMathML(text) {
             if (!text) return text;
 
-            return text
-                .replace(/\[frac:([^\]]+)\]/g, function(match, frac) {
-                    if (frac.includes('/')) {
-                        const [num, den] = frac.split('/');
-                        return `<math class="math-inline"><mfrac><mn>${num.trim()}</mn><mn>${den.trim()}</mn></mfrac></math>`;
-                    }
+            // Nouvelle syntaxe pour expressions complexes [math:...]
+            text = text.replace(/\[math:([^\]]+)\]/g, function(match, expr) {
+                try {
+                    return parseComplexMathExpression(expr);
+                } catch (e) {
+                    console.error('Erreur parsing math:', e);
                     return match;
-                })
-                .replace(/\[pow:([^\]]+)\]/g, function(match, expr) {
-                    if (expr.includes('^')) {
-                        const [base, exp] = expr.split('^');
-                        return `<math class="math-inline"><msup><mn>${base.trim()}</mn><mn>${exp.trim()}</mn></msup></math>`;
-                    }
-                    return match;
-                })
-                .replace(/\[sqrt:([^\]]+)\]/g, function(match, value) {
-                    return `<math class="math-inline"><msqrt><mn>${value.trim()}</mn></msqrt></math>`;
-                })
-                .replace(/\[root:([^\]]+)\]/g, function(match, values) {
-                    const parts = values.split(',');
-                    if (parts.length === 2) {
-                        const [radicande, indice] = parts;
-                        return `<math class="math-inline"><mroot><mn>${radicande.trim()}</mn><mn>${indice.trim()}</mn></mroot></math>`;
-                    }
-                    return match;
-                })
-                .replace(/\[var:([^\]]+)\]/g, function(match, variable) {
-                    if (variable.includes('_')) {
-                        const [nom, indice] = variable.split('_');
-                        return `<math class="math-inline"><msub><mi>${nom.trim()}</mi><mn>${indice.trim()}</mn></msub></math>`;
-                    } else {
-                        return `<math class="math-inline"><mi>${variable.trim()}</mi></math>`;
-                    }
-                });
+                }
+            });
+
+            // Traitement récursif des expressions imbriquées
+            return parseNestedMathExpressions(text);
         }
 
-        function convertMathMLToNotation(html) {
-            if (!html) return html;
+        function parseNestedMathExpressions(text) {
+            // Répéter jusqu'à ce qu'il n'y ait plus d'expressions à traiter
+            let previousText = '';
+            let currentText = text;
 
-            return html
+            while (previousText !== currentText) {
+                previousText = currentText;
+
+                // Traiter les expressions de l'intérieur vers l'extérieur
+                // D'abord les expressions les plus simples (sans imbrication)
+                currentText = currentText
+                    .replace(/\[sqrt:([^\[\]]+)\]/g, function(match, value) {
+                        const parsedValue = parseInnerExpression(value.trim());
+                        return `<math class="math-inline"><msqrt>${parsedValue}</msqrt></math>`;
+                    })
+                    .replace(/\[pow:([^\[\]]+)\]/g, function(match, expr) {
+                        if (expr.includes('^')) {
+                            const [base, exp] = expr.split('^');
+                            const parsedBase = parseInnerExpression(base.trim());
+                            const parsedExp = parseInnerExpression(exp.trim());
+                            return `<math class="math-inline"><msup>${parsedBase}${parsedExp}</msup></math>`;
+                        }
+                        return match;
+                    })
+                    .replace(/\[root:([^\[\]]+)\]/g, function(match, values) {
+                        const parts = values.split(',');
+                        if (parts.length === 2) {
+                            const parsedRadicande = parseInnerExpression(parts[0].trim());
+                            const parsedIndice = parseInnerExpression(parts[1].trim());
+                            return `<math class="math-inline"><mroot>${parsedRadicande}${parsedIndice}</mroot></math>`;
+                        }
+                        return match;
+                    })
+                    .replace(/\[var:([^\[\]]+)\]/g, function(match, variable) {
+                        if (variable.includes('_')) {
+                            const [nom, indice] = variable.split('_');
+                            return `<math class="math-inline"><msub><mi>${nom.trim()}</mi><mn>${indice.trim()}</mn></msub></math>`;
+                        } else {
+                            return `<math class="math-inline"><mi>${variable.trim()}</mi></math>`;
+                        }
+                    });
+
+                // Traiter les fractions avec un algorithme spécial pour les expressions imbriquées
+                currentText = parseFractions(currentText);
+            }
+
+            return currentText;
+        }
+
+        function parseFractions(text) {
+            // Rechercher toutes les occurrences de [frac:...] avec gestion des crochets imbriqués
+            let result = text;
+            let index = 0;
+
+            while (index < result.length) {
+                const fracStart = result.indexOf('[frac:', index);
+                if (fracStart === -1) break;
+
+                const contentStart = fracStart + 6; // longueur de '[frac:'
+                let bracketCount = 1;
+                let contentEnd = contentStart;
+
+                // Trouver la fin de l'expression en comptant les crochets
+                while (contentEnd < result.length && bracketCount > 0) {
+                    if (result[contentEnd] === '[') {
+                        bracketCount++;
+                    } else if (result[contentEnd] === ']') {
+                        bracketCount--;
+                    }
+                    contentEnd++;
+                }
+
+                if (bracketCount === 0) {
+                    const fracContent = result.substring(contentStart, contentEnd - 1);
+
+                    if (fracContent.includes('/')) {
+                        // Trouver la position du / en tenant compte des crochets imbriqués
+                        const slashPos = findMainSlash(fracContent);
+                        if (slashPos !== -1) {
+                            const num = fracContent.substring(0, slashPos).trim();
+                            const den = fracContent.substring(slashPos + 1).trim();
+                            const parsedNum = parseInnerExpression(num);
+                            const parsedDen = parseInnerExpression(den);
+
+                            const replacement = `<math class="math-inline"><mfrac>${parsedNum}${parsedDen}</mfrac></math>`;
+                            result = result.substring(0, fracStart) + replacement + result.substring(contentEnd);
+                            index = fracStart + replacement.length;
+                        } else {
+                            index = contentEnd;
+                        }
+                    } else {
+                        index = contentEnd;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        function findMainSlash(content) {
+            // Trouver la position du / principal (pas dans des crochets imbriqués)
+            let bracketCount = 0;
+            for (let i = 0; i < content.length; i++) {
+                if (content[i] === '[') {
+                    bracketCount++;
+                } else if (content[i] === ']') {
+                    bracketCount--;
+                } else if (content[i] === '/' && bracketCount === 0) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function parseInnerExpression(expr) {
+            // Si l'expression contient du MathML déjà parsé, l'extraire
+            if (expr.includes('<math class="math-inline">')) {
+                // Extraire le contenu entre <math> et </math>
+                const mathMatch = expr.match(/<math class="math-inline">(.*?)<\/math>/);
+                if (mathMatch) {
+                    return mathMatch[1];
+                }
+            }
+
+            // Gérer les divisions avec / pour les fractions
+            if (expr.includes('/') && !expr.includes('<m')) {
+                const parts = expr.split('/');
+                if (parts.length === 2) {
+                    const num = parseInnerExpression(parts[0].trim());
+                    const den = parseInnerExpression(parts[1].trim());
+                    return `<mfrac>${num}${den}</mfrac>`;
+                }
+            }
+
+            // Si c'est un nombre simple
+            if (/^-?\d+(\.\d+)?$/.test(expr)) {
+                return `<mn>${expr}</mn>`;
+            }
+
+            // Si c'est une variable simple
+            if (/^[a-zA-Z]$/.test(expr)) {
+                return `<mi>${expr}</mi>`;
+            }
+
+            // Variables avec plusieurs caractères
+            if (/^[a-zA-Z_]\w*$/.test(expr)) {
+                return `<mi>${expr}</mi>`;
+            }
+
+            // Par défaut, traiter comme du texte
+            return `<mn>${expr}</mn>`;
+        }
+
+        // Nouvelle fonction pour parser les expressions mathématiques complexes
+        function parseComplexMathExpression(expr) {
+            expr = expr.trim();
+
+            // Traiter les fonctions mathématiques de manière récursive
+            while (true) {
+                const match = expr.match(/(sqrt|pow|frac)\s*\(/);
+                if (!match) break;
+
+                const funcName = match[1];
+                const startPos = match.index;
+                const parenStart = expr.indexOf('(', startPos);
+                const parenEnd = findMatchingParen(expr, parenStart);
+
+                if (parenEnd === -1) break;
+
+                const funcContent = expr.substring(parenStart + 1, parenEnd);
+                let replacement = '';
+
+                if (funcName === 'sqrt') {
+                    const parsedContent = parseSimpleExpression(funcContent);
+                    replacement = `<msqrt>${parsedContent}</msqrt>`;
+                } else if (funcName === 'pow') {
+                    const parts = splitFunctionArgs(funcContent);
+                    if (parts.length === 2) {
+                        const base = parseSimpleExpression(parts[0]);
+                        const exp = parseSimpleExpression(parts[1]);
+                        replacement = `<msup>${base}${exp}</msup>`;
+                    }
+                } else if (funcName === 'frac') {
+                    const parts = splitFunctionArgs(funcContent);
+                    if (parts.length === 2) {
+                        const num = parseSimpleExpression(parts[0]);
+                        const den = parseSimpleExpression(parts[1]);
+                        replacement = `<mfrac>${num}${den}</mfrac>`;
+                    }
+                }
+
+                expr = expr.substring(0, startPos) + replacement + expr.substring(parenEnd + 1);
+            }
+
+            const finalParsed = parseSimpleExpression(expr);
+            return `<math class="math-inline">${finalParsed}</math>`;
+        }
+
+        function findMatchingParen(text, startPos) {
+            let count = 1;
+            let pos = startPos + 1;
+
+            while (pos < text.length && count > 0) {
+                if (text[pos] === '(') count++;
+                else if (text[pos] === ')') count--;
+                pos++;
+            }
+
+            return count === 0 ? pos - 1 : -1;
+        }
+
+        function splitFunctionArgs(content) {
+            const args = [];
+            let currentArg = '';
+            let parenCount = 0;
+
+            for (const char of content) {
+                if (char === ',' && parenCount === 0) {
+                    args.push(currentArg.trim());
+                    currentArg = '';
+                } else {
+                    if (char === '(') parenCount++;
+                    else if (char === ')') parenCount--;
+                    currentArg += char;
+                }
+            }
+
+            if (currentArg.trim()) {
+                args.push(currentArg.trim());
+            }
+
+            return args;
+        }
+
+        function parseSimpleExpression(expr) {
+            expr = expr.trim();
+
+            if (!expr) return '<mi></mi>';
+
+            // Si c'est déjà du MathML, le retourner tel quel
+            if (expr.startsWith('<m') && expr.endsWith('>')) {
+                return expr;
+            }
+
+            // Si c'est un nombre
+            if (/^-?\d+(\.\d+)?$/.test(expr)) {
+                return `<mn>${expr}</mn>`;
+            }
+
+            // Si c'est une variable simple
+            if (/^[a-zA-Z]$/.test(expr)) {
+                return `<mi>${expr}</mi>`;
+            }
+
+            // Gérer les opérateurs + et -
+            for (const op of ['+', '-']) {
+                let parenCount = 0;
+                for (let i = 1; i < expr.length; i++) { // Commencer à 1 pour éviter le - initial
+                    if (expr[i] === '(') parenCount++;
+                    else if (expr[i] === ')') parenCount--;
+                    else if (expr[i] === op && parenCount === 0) {
+                        const left = parseSimpleExpression(expr.substring(0, i));
+                        const right = parseSimpleExpression(expr.substring(i + 1));
+                        return `${left}<mo>${op}</mo>${right}`;
+                    }
+                }
+            }
+
+            // Gérer les opérateurs * et /
+            for (const op of ['*', '/']) {
+                let parenCount = 0;
+                for (let i = 0; i < expr.length; i++) {
+                    if (expr[i] === '(') parenCount++;
+                    else if (expr[i] === ')') parenCount--;
+                    else if (expr[i] === op && parenCount === 0) {
+                        const left = parseSimpleExpression(expr.substring(0, i));
+                        const right = parseSimpleExpression(expr.substring(i + 1));
+                        const opSymbol = op === '*' ? '×' : '÷';
+                        return `${left}<mo>${opSymbol}</mo>${right}`;
+                    }
+                }
+            }
+
+            // Si l'expression est entre parenthèses, les enlever
+            if (expr.startsWith('(') && expr.endsWith(')')) {
+                return parseSimpleExpression(expr.substring(1, expr.length - 1));
+            }
+
+            // Variables avec plusieurs caractères
+            if (/^[a-zA-Z_]\w*$/.test(expr)) {
+                return `<mi>${expr}</mi>`;
+            }
+
+            // Par défaut
+            return `<mi>${expr}</mi>`;
+        }
+
+        function convertMathMLToNotation(text) {
+            if (!text) return text;
+
+            // Conversion inverse pour sauvegarder en notation simple
+            return text
                 .replace(/<math[^>]*><mfrac><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mfrac><\/math>/g, '[frac:$1/$2]')
                 .replace(/<math[^>]*><msup><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/msup><\/math>/g, '[pow:$1^$2]')
                 .replace(/<math[^>]*><msqrt><mn>([^<]+)<\/mn><\/msqrt><\/math>/g, '[sqrt:$1]')
                 .replace(/<math[^>]*><mroot><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mroot><\/math>/g, '[root:$1,$2]')
-                .replace(/<math[^>]*><msub><mi>([^<]+)<\/mi><mn>([^<]+)<\/mn><\/msub><\/math>/g, '[var:$1_$2]')
-                .replace(/<math[^>]*><mi>([^<]+)<\/mi><\/math>/g, '[var:$1]');
+                .replace(/<math[^>]*><msub><mi>([^<]+)<\/mi><mn>([^<]+)<\/mn><\/msub><\/math>/g, '[var:$1_$2]');
         }
 
-        // Initialisation automatique des éditeurs au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialiser tous les éléments avec la classe 'math-editor'
-            document.querySelectorAll('.math-editor').forEach(function(element) {
-                if (element.id) {
-                    // Délai pour s'assurer que la page est complètement chargée
-                    setTimeout(() => initMathEditor(element.id), 100);
+        // Sauvegarde automatique des brouillons
+        function enableAutoSave() {
+            Object.keys(window.editorInstances).forEach(editorId => {
+                const editor = window.editorInstances[editorId];
+                if (editor) {
+                    editor.model.document.on('change:data', () => {
+                        const content = editor.getData();
+                        localStorage.setItem('draft_' + editorId, content);
+                    });
                 }
             });
-        });
+        }
+
+        // Charger les brouillons sauvegardés
+        function loadDrafts() {
+            Object.keys(window.editorInstances).forEach(editorId => {
+                const editor = window.editorInstances[editorId];
+                const draft = localStorage.getItem('draft_' + editorId);
+                if (editor && draft) {
+                    editor.setData(draft);
+                }
+            });
+        }
     </script>
 
     <style>

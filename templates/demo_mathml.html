@@ -131,6 +131,77 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 5 - Expression complexe (NOUVELLE SYNTAXE) :</h6>
+                        <div class="alert alert-success math-content">
+                            {{ "Calculer [math:sqrt(1 + sqrt(x))] pour x = 3"|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 6 - Fraction complexe (NOUVELLE SYNTAXE) :</h6>
+                        <div class="alert alert-success math-content">
+                            {{ "Simplifier [math:frac(a + b, c - d)] avec a=5, b=3, c=8, d=2"|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Exemple 7 - Puissance d'une racine (NOUVELLE SYNTAXE) :</h6>
+                        <div class="alert alert-success math-content">
+                            {{ "Développer [math:pow(sqrt(x + 1), 2)] = x + 1"|mathml|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-info mb-4">
+            <div class="card-body">
+                <h4>🚀 Nouvelle Syntaxe Avancée [math:...]</h4>
+
+                <p><strong>Utilisez la nouvelle syntaxe [math:...] pour des expressions complexes :</strong></p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>📐 Racines imbriquées :</h6>
+                        <div style="background: white; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            <code>[math:sqrt(1 + sqrt(x))]</code><br>
+                            <small>→ √(1 + √x)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6>📊 Fractions complexes :</h6>
+                        <div style="background: white; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            <code>[math:frac(a + b, c - d)]</code><br>
+                            <small>→ (a + b)/(c - d)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>⚡ Puissances complexes :</h6>
+                        <div style="background: white; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            <code>[math:pow(sqrt(x), 2)]</code><br>
+                            <small>→ (√x)²</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6>🔢 Expressions avec opérateurs :</h6>
+                        <div style="background: white; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            <code>[math:sqrt(x + y * z)]</code><br>
+                            <small>→ √(x + y × z)</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -35,22 +35,35 @@
                 <div class="btn-toolbar mb-2 mb-md-0">
                     <div class="btn-group me-2" role="group">
                         <a href="{{ url_for('admin_editor') }}" class="btn btn-primary">
-                            ✏️ Éditeur MathML
+                            ✏️ Éditeur MathML Simple
                         </a>
-                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#ajouterQuestionModal">
+<!--                        <a href="{{ url_for('admin_mathquill_editor') }}" class="btn btn-success">-->
+<!--                            🧮 Éditeur MathML Avancé-->
+<!--                        </a>-->
+                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#ajouterQuestionModal">
                             ➕ Ajouter une question
                         </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+                            🏠 Retour à l'accueil
+                        </a>
                     </div>
                 </div>
             </div>
 
             <div class="mb-3">
                 <div class="alert alert-info">
-                    <strong>💡 Astuce :</strong> Utilisez l'<a href="{{ url_for('admin_editor') }}" class="alert-link">Éditeur MathML</a>
-                    pour créer facilement des questions avec des formules mathématiques professionnelles !
+                    <strong>💡 Astuce :</strong> Utilisez l'<a href="{{ url_for('admin_mathquill_editor') }}" class="alert-link">Éditeur MathML Avancé</a>
+                    pour créer des expressions mathématiques complexes imbriquées comme √(1 + √x) ou ((a+b)/(c-d))^(1/2) !
                 </div>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary">Retour à l'accueil</a>
-                <a href="{{ url_for('demo_mathml') }}" class="btn btn-info">📚 Guide MathML</a>
+                <div class="alert alert-success">
+                    <strong>🎯 Nouveau :</strong> L'éditeur avancé supporte maintenant :
+                    <ul class="mb-0 mt-2">
+                        <li>✅ Expressions imbriquées sur plusieurs niveaux</li>
+                        <li>✅ Interface WYSIWYG avec MathQuill</li>
+                        <li>✅ Conversion automatique LaTeX ↔ Notation personnalisée</li>
+                        <li>✅ Aperçu en temps réel</li>
+                    </ul>
+                </div>
             </div>
 
             <div class="tab-content">
@@ -258,107 +271,6 @@
     </div>
 </div>
 
-<!-- Modal Éditer Question -->
-<div class="modal fade" id="editerQuestionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">✏️ Modifier la question</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="formEditerQuestion">
-                <input type="hidden" name="question_id" id="edit_question_id">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Niveau</label>
-                                <select class="form-select" name="niveau" id="edit_niveau" required>
-                                    <option value="6eme">6ème</option>
-                                    <option value="5eme">5ème</option>
-                                    <option value="4eme">4ème</option>
-                                    <option value="3eme">3ème</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Chapitre</label>
-                                <select class="form-select" name="chapitre" id="edit_chapitre" required>
-                                    <!-- Chargement dynamique -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Difficulté</label>
-                        <select class="form-select" name="difficulte" id="edit_difficulte" required>
-                            <option value="facile">Facile</option>
-                            <option value="moyen">Moyen</option>
-                            <option value="difficile">Difficile</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Problème</label>
-                        <textarea class="form-control" name="probleme" id="edit_probleme" rows="3" required></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Option A</label>
-                                <input type="text" class="form-control" name="option_a" id="edit_option_a" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Option B</label>
-                                <input type="text" class="form-control" name="option_b" id="edit_option_b" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Option C</label>
-                                <input type="text" class="form-control" name="option_c" id="edit_option_c" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Option D</label>
-                                <input type="text" class="form-control" name="option_d" id="edit_option_d" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Réponse correcte</label>
-                        <select class="form-select" name="reponse_correcte" id="edit_reponse_correcte" required>
-                            <option value="0">Option A</option>
-                            <option value="1">Option B</option>
-                            <option value="2">Option C</option>
-                            <option value="3">Option D</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Explication</label>
-                        <textarea class="form-control" name="explication" id="edit_explication" rows="2" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">✅ Modifier</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
 // JavaScript pour l'administration
 document.addEventListener('DOMContentLoaded', function() {
@@ -392,27 +304,6 @@ function initialiserFormulaire() {
 
     // Initialiser les filtres de la liste principale
     initialiserFiltres();
-
-    // Initialiser le formulaire d'édition
-    initialiserFormulaireEdition();
-}
-
-function initialiserFormulaireEdition() {
-    // Gérer le changement de niveau dans le modal d'édition
-    const editNiveau = document.getElementById('edit_niveau');
-    const editChapitre = document.getElementById('edit_chapitre');
-
-    editNiveau.addEventListener('change', function() {
-        const niveau = this.value;
-        chargerChapitres(niveau, editChapitre);
-    });
-
-    // Gestionnaire de soumission du formulaire d'édition
-    const formEditer = document.getElementById('formEditerQuestion');
-    formEditer.addEventListener('submit', function(e) {
-        e.preventDefault();
-        sauvegarderModifications();
-    });
 }
 
 function initialiserFiltres() {
@@ -562,14 +453,18 @@ function chargerQuestions() {
             if (data.questions) {
                 data.questions.forEach(question => {
                     const row = document.createElement('tr');
+
+                    // Convertir le problème avec MathML sans troncature
+                    const problemeAvecMathML = convertirNotationVersMathML(question.probleme);
+
                     row.innerHTML = `
                         <td>${question.id}</td>
-                        <td>${question.probleme.substring(0, 50)}...</td>
+                        <td class="math-content" style="min-width: 200px; word-wrap: break-word;">${problemeAvecMathML}</td>
                         <td><span class="badge bg-primary">${question.niveau_nom.toUpperCase()}</span></td>
                         <td>${question.chapitre_titre}</td>
                         <td><span class="badge bg-${getDifficultyColor(question.difficulte)}">${question.difficulte}</span></td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="modifierQuestion(${question.id})">✏️</button>
+                            <a class="btn btn-sm btn-outline-success" href="/admin/editor/${question.id}" title="Éditer (vue complète)">🧮</a>
                             <button class="btn btn-sm btn-outline-danger" onclick="supprimerQuestion(${question.id})">🗑️</button>
                         </td>
                     `;
@@ -580,6 +475,193 @@ function chargerQuestions() {
         .catch(error => {
             console.error('Erreur lors du chargement des questions:', error);
         });
+}
+
+// Fonction pour convertir la notation personnalisée vers MathML avec support des expressions imbriquées
+function convertirNotationVersMathML(text) {
+    if (!text) return text;
+
+    // Traitement récursif des expressions imbriquées
+    return parseNestedMathExpressions(text);
+}
+
+function parseNestedMathExpressions(text) {
+    // Répéter jusqu'à ce qu'il n'y ait plus d'expressions à traiter
+    let previousText = '';
+    let currentText = text;
+
+    while (previousText !== currentText) {
+        previousText = currentText;
+
+        // Traiter les expressions de l'intérieur vers l'extérieur
+        // D'abord les expressions les plus simples (sans imbrication)
+        currentText = currentText
+            .replace(/\[sqrt:([^\[\]]+)\]/g, function(match, value) {
+                const parsedValue = parseInnerExpression(value.trim());
+                return `<math class="math-inline"><msqrt>${parsedValue}</msqrt></math>`;
+            })
+            .replace(/\[pow:([^\[\]]+)\]/g, function(match, expr) {
+                if (expr.includes('^')) {
+                    const [base, exp] = expr.split('^');
+                    const parsedBase = parseInnerExpression(base.trim());
+                    const parsedExp = parseInnerExpression(exp.trim());
+                    return `<math class="math-inline"><msup>${parsedBase}${parsedExp}</msup></math>`;
+                }
+                return match;
+            })
+            .replace(/\[root:([^\[\]]+)\]/g, function(match, values) {
+                const parts = values.split(',');
+                if (parts.length === 2) {
+                    const parsedRadicande = parseInnerExpression(parts[0].trim());
+                    const parsedIndice = parseInnerExpression(parts[1].trim());
+                    return `<math class="math-inline"><mroot>${parsedRadicande}${parsedIndice}</mroot></math>`;
+                }
+                return match;
+            })
+            .replace(/\[var:([^\[\]]+)\]/g, function(match, variable) {
+                if (variable.includes('_')) {
+                    const [nom, indice] = variable.split('_');
+                    return `<math class="math-inline"><msub><mi>${nom.trim()}</mi><mn>${indice.trim()}</mn></msub></math>`;
+                } else {
+                    return `<math class="math-inline"><mi>${variable.trim()}</mi></math>`;
+                }
+            });
+
+        // Traiter les fractions avec un algorithme spécial pour les expressions imbriquées
+        currentText = parseFractions(currentText);
+    }
+
+    return currentText;
+}
+
+function parseFractions(text) {
+    // Rechercher toutes les occurrences de [frac:...] avec gestion des crochets imbriqués
+    let result = text;
+    let index = 0;
+
+    while (index < result.length) {
+        const fracStart = result.indexOf('[frac:', index);
+        if (fracStart === -1) break;
+
+        const contentStart = fracStart + 6; // longueur de '[frac:'
+        let bracketCount = 1;
+        let contentEnd = contentStart;
+
+        // Trouver la fin de l'expression en comptant les crochets
+        while (contentEnd < result.length && bracketCount > 0) {
+            if (result[contentEnd] === '[') {
+                bracketCount++;
+            } else if (result[contentEnd] === ']') {
+                bracketCount--;
+            }
+            contentEnd++;
+        }
+
+        if (bracketCount === 0) {
+            const fracContent = result.substring(contentStart, contentEnd - 1);
+
+            if (fracContent.includes('/')) {
+                // Trouver la position du / en tenant compte des crochets imbriqués
+                const slashPos = findMainSlash(fracContent);
+                if (slashPos !== -1) {
+                    const num = fracContent.substring(0, slashPos).trim();
+                    const den = fracContent.substring(slashPos + 1).trim();
+                    const parsedNum = parseInnerExpression(num);
+                    const parsedDen = parseInnerExpression(den);
+
+                    const replacement = `<math class="math-inline"><mfrac>${parsedNum}${parsedDen}</mfrac></math>`;
+                    result = result.substring(0, fracStart) + replacement + result.substring(contentEnd);
+                    index = fracStart + replacement.length;
+                } else {
+                    index = contentEnd;
+                }
+            } else {
+                index = contentEnd;
+            }
+        } else {
+            break;
+        }
+    }
+
+    return result;
+}
+
+function findMainSlash(content) {
+    // Trouver la position du / principal (pas dans des crochets imbriqués)
+    let bracketCount = 0;
+    for (let i = 0; i < content.length; i++) {
+        if (content[i] === '[') {
+            bracketCount++;
+        } else if (content[i] === ']') {
+            bracketCount--;
+        } else if (content[i] === '/' && bracketCount === 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function parseInnerExpression(expr) {
+    // Si l'expression contient du MathML déjà parsé, l'extraire
+    if (expr.includes('<math class="math-inline">')) {
+        // Extraire le contenu entre <math> et </math>
+        const mathMatch = expr.match(/<math class="math-inline">(.*?)<\/math>/);
+        if (mathMatch) {
+            return mathMatch[1];
+        }
+    }
+
+    // Gérer les divisions avec / pour les fractions
+    if (expr.includes('/') && !expr.includes('<m')) {
+        const parts = expr.split('/');
+        if (parts.length === 2) {
+            const num = parseInnerExpression(parts[0].trim());
+            const den = parseInnerExpression(parts[1].trim());
+            return `<mfrac>${num}${den}</mfrac>`;
+        }
+    }
+
+    // Si c'est un nombre simple
+    if (/^-?\d+(\.\d+)?$/.test(expr)) {
+        return `<mn>${expr}</mn>`;
+    }
+
+    // Si c'est une variable simple
+    if (/^[a-zA-Z]$/.test(expr)) {
+        return `<mi>${expr}</mi>`;
+    }
+
+    // Variables avec plusieurs caractères
+    if (/^[a-zA-Z_]\w*$/.test(expr)) {
+        return `<mi>${expr}</mi>`;
+    }
+
+    // Par défaut, traiter comme du texte
+    return `<mn>${expr}</mn>`;
+}
+
+// Fonction pour tronquer intelligemment un texte contenant du MathML
+function tronquerProblemeAvecMathML(texte, maxLength) {
+    if (!texte) return '';
+
+    // Si le texte est court, le retourner tel quel
+    if (texte.length <= maxLength) {
+        return texte;
+    }
+
+    // Pour les textes longs, essayer de couper intelligemment
+    // Éviter de couper au milieu d'une balise MathML
+    let index = maxLength;
+
+    // Si on est au milieu d'une balise math, reculer jusqu'au début
+    if (texte.substring(0, index).includes('<math') && !texte.substring(0, index).includes('</math>')) {
+        const lastMathStart = texte.substring(0, index).lastIndexOf('<math');
+        if (lastMathStart > maxLength * 0.5) { // Si la balise math n'est pas trop loin
+            index = lastMathStart;
+        }
+    }
+
+    return texte.substring(0, index) + '...';
 }
 
 function filtrerQuestions() {
@@ -593,87 +675,6 @@ function getDifficultyColor(difficulte) {
         case 'difficile': return 'danger';
         default: return 'secondary';
     }
-}
-
-function modifierQuestion(id) {
-    // Charger les détails de la question dans le formulaire d'édition
-    fetch(`/admin/api/question/${id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.question) {
-                const question = data.question;
-
-                // Remplir le formulaire avec les données de la question
-                document.getElementById('edit_question_id').value = question.id;
-                document.getElementById('edit_probleme').value = question.probleme;
-                document.getElementById('edit_option_a').value = question.options[0];
-                document.getElementById('edit_option_b').value = question.options[1];
-                document.getElementById('edit_option_c').value = question.options[2];
-                document.getElementById('edit_option_d').value = question.options[3];
-                document.getElementById('edit_reponse_correcte').value = question.reponse_correcte;
-                document.getElementById('edit_explication').value = question.explication;
-
-                // Définir les sélections pour le niveau et la difficulté
-                document.getElementById('edit_niveau').value = question.niveau;
-                document.getElementById('edit_difficulte').value = question.difficulte;
-
-                // Charger les chapitres associés au niveau de la question
-                const editChapitre = document.getElementById('edit_chapitre');
-                chargerChapitres(question.niveau, editChapitre).then(() => {
-                    // Sélectionner le chapitre correct après le chargement
-                    editChapitre.value = question.chapitre;
-                });
-
-                // Afficher le modal d'édition
-                const modal = new bootstrap.Modal(document.getElementById('editerQuestionModal'));
-                modal.show();
-            } else {
-                alert('Question non trouvée');
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors du chargement de la question:', error);
-            alert('Erreur lors du chargement des détails de la question');
-        });
-}
-
-function sauvegarderModifications() {
-    const form = document.getElementById('formEditerQuestion');
-    const formData = new FormData(form);
-
-    // Convertir en objet JSON
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-
-    fetch('/admin/api/question/' + data.question_id, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Fermer le modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editerQuestionModal'));
-            modal.hide();
-
-            // Recharger la liste des questions
-            chargerQuestions();
-
-            // Afficher un message de succès
-            alert('Modifications enregistrées avec succès !');
-        } else {
-            alert('Erreur : ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de l\'enregistrement des modifications');
-    });
 }
 
 function supprimerQuestion(id) {
@@ -714,4 +715,7 @@ function exporterDonnees() {
     alert('Fonctionnalité d\'export à implémenter');
 }
 </script>
+
+<!-- Ajout MathLive si non inclus -->
+<script src="https://unpkg.com/mathlive/dist/mathlive.min.js"></script>
 {% endblock %}

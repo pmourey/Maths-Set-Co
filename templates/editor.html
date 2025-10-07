@@ -1,0 +1,844 @@
+{% extends "base.html" %}
+
+{% block title %}Éditeur de Questions - Modifier une Question QCM{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h3 class="mb-0">📝 Modifier une Question avec Support MathML</h3>
+    </div>
+
+    <div class="card-body">
+        <!-- Formulaire d'édition de question -->
+        <form id="questionForm" method="POST">
+            <input type="hidden" id="question_id">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="niveau" class="form-label">Niveau *</label>
+                        <select class="form-select" id="niveau" name="niveau" required>
+                            <option value="">Sélectionnez un niveau</option>
+                            <option value="6eme">6ème</option>
+                            <option value="5eme">5ème</option>
+                            <option value="4eme">4ème</option>
+                            <option value="3eme">3ème</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="chapitre" class="form-label">Chapitre *</label>
+                        <select class="form-select" id="chapitre" name="chapitre" required>
+                            <option value="">Sélectionnez d'abord un niveau</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="probleme" class="form-label">Énoncé du problème *</label>
+                <textarea class="form-control math-editor" id="probleme" name="probleme" rows="6" required
+                          placeholder="Saisissez l'énoncé du problème. Utilisez le bouton 'Math' pour insérer des formules."></textarea>
+                <div class="form-text">
+                    Utilisez l'éditeur pour formater votre texte et insérer des formules mathématiques.
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_a" class="form-label">Option A *</label>
+                        <textarea class="form-control math-editor" id="option_a" name="option_a" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_b" class="form-label">Option B *</label>
+                        <textarea class="form-control math-editor" id="option_b" name="option_b" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_c" class="form-label">Option C *</label>
+                        <textarea class="form-control math-editor" id="option_c" name="option_c" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="option_d" class="form-label">Option D *</label>
+                        <textarea class="form-control math-editor" id="option_d" name="option_d" rows="3" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="reponse_correcte" class="form-label">Réponse correcte *</label>
+                        <select class="form-select" id="reponse_correcte" name="reponse_correcte" required>
+                            <option value="">Choisissez la bonne réponse</option>
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="difficulte" class="form-label">Difficulté *</label>
+                        <select class="form-select" id="difficulte" name="difficulte" required>
+                            <option value="">Sélectionnez la difficulté</option>
+                            <option value="facile">Facile</option>
+                            <option value="moyen">Moyen</option>
+                            <option value="difficile">Difficile</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="explication" class="form-label">Explication (optionnel)</label>
+                <textarea class="form-control math-editor" id="explication" name="explication" rows="4"
+                          placeholder="Explication détaillée de la solution (optionnel)"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-info" onclick="previewQuestion()">
+                        👁️ Aperçu
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        🔄 Réinitialiser
+                    </button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='{{ url_for('admin') }}'">
+                        ← Retour à l'admin
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        💾 Enregistrer les modifications
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Zone d'aperçu -->
+        <div id="preview-section" class="mt-5" style="display: none;">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📋 Aperçu de la question</h5>
+                </div>
+                <div class="card-body">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+<!-- MathJax pour le rendu des formules -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Styles pour les outils mathématiques -->
+<style>
+.math-toolbar {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.math-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.math-btn:hover {
+    background: #0056b3;
+}
+.ck-editor__editable {
+    min-height: 200px;
+}
+</style>
+
+<script>
+const questionId = {{ question_id|default('null') }};
+
+// Configuration MathJax
+window.MathJax = {
+    tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+    },
+    options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        processHtmlClass: 'math-content'
+    }
+};
+
+// Instance des éditeurs CKEditor
+window.editorInstances = {};
+
+// Fonction d'initialisation d'un éditeur Math avec barre d'outils
+function initMathEditor(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element || window.editorInstances[elementId]) return;
+
+    // Créer la barre d'outils mathématiques
+    const mathToolbar = document.createElement('div');
+    mathToolbar.className = 'math-toolbar';
+    mathToolbar.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px;">🧮 Formules mathématiques :</div>
+        <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'frac')">Fraction</button>
+        <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'pow')">Puissance</button>
+        <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'sqrt')">Racine</button>
+        <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'root')">Racine n-ième</button>
+        <button type="button" class="math-btn" onclick="insertMath('${elementId}', 'var')">Variable</button>
+        <button type="button" class="math-btn" onclick="showMathDialog('${elementId}')">Guide complet</button>
+    `;
+    element.parentNode.insertBefore(mathToolbar, element);
+
+    ClassicEditor
+        .create(element, {
+            toolbar: [
+                'heading', '|',
+                'bold', 'italic', 'underline', '|',
+                'bulletedList', 'numberedList', '|',
+                'insertTable', 'blockQuote', '|',
+                'undo', 'redo'
+            ],
+            heading: {
+                options: [
+                    { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                    { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                    { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' }
+                ]
+            }
+        })
+        .then(editor => {
+            window.editorInstances[elementId] = editor;
+
+            // Charger le contenu initial s'il existe
+            const initialContent = element.value || element.textContent;
+            if (initialContent) {
+                editor.setData(convertNotationToMathML(initialContent));
+            }
+
+            // Sauvegarde automatique des brouillons
+            editor.model.document.on('change:data', () => {
+                const content = editor.getData();
+                const convertedContent = convertMathMLToNotation(content);
+                element.value = convertedContent;
+                localStorage.setItem('draft_' + elementId, content);
+                element.dispatchEvent(new Event('change'));
+            });
+
+            // Restaurer les brouillons au chargement (sauf si on charge une question existante)
+            if (!questionId) {
+                const draft = localStorage.getItem('draft_' + elementId);
+                if (draft) {
+                    editor.setData(draft);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de l\'initialisation de l\'éditeur:', error);
+        });
+}
+
+// Fonction d'insertion de formules mathématiques
+function insertMath(editorId, type) {
+    const editor = window.editorInstances[editorId];
+    if (!editor) return;
+
+    let mathText = '';
+
+    switch(type) {
+        case 'frac':
+            mathText = '[frac:3/4]';
+            break;
+        case 'pow':
+            mathText = '[pow:x^2]';
+            break;
+        case 'sqrt':
+            mathText = '[sqrt:16]';
+            break;
+        case 'root':
+            mathText = '[root:8,3]';
+            break;
+        case 'var':
+            mathText = '[var:x_1]';
+            break;
+    }
+
+    editor.model.change(writer => {
+        const insertPosition = editor.model.document.selection.getFirstPosition();
+        writer.insertText(mathText, insertPosition);
+    });
+}
+
+// Modal de guide des formules mathématiques
+function showMathDialog(editorId) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h4>🧮 Guide des formules mathématiques</h4>
+                <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h5>📝 Syntaxes disponibles :</h5>
+                <div style="font-family: monospace; background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <div style="margin: 8px 0;"><strong>Fractions :</strong> [frac:3/4] → ¾</div>
+                    <div style="margin: 8px 0;"><strong>Puissances :</strong> [pow:x^2] → x²</div>
+                    <div style="margin: 8px 0;"><strong>Racines :</strong> [sqrt:16] → √16</div>
+                    <div style="margin: 8px 0;"><strong>Racines n-ièmes :</strong> [root:8,3] → ∛8</div>
+                    <div style="margin: 8px 0;"><strong>Variables :</strong> [var:x_1] → x₁</div>
+                    <div style="margin: 8px 0;"><strong>Expressions complexes :</strong> [math:frac(sqrt(16),pow(x,2))] → √16/x²</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="formula-input" style="font-weight: bold;">Tapez votre formule :</label>
+                <textarea id="formula-input" style="width: 100%; height: 80px; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Exemple: Calculer [frac:3/4] + [pow:x^2]"></textarea>
+
+                <div style="margin: 10px 0;">
+                    <strong>Aperçu :</strong>
+                    <div id="formula-preview" style="border: 1px solid #ddd; padding: 15px; background: white; min-height: 50px; border-radius: 4px;">
+                        <em>Tapez une formule ci-dessus...</em>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button onclick="this.closest('.modal-overlay').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px; cursor: pointer;">Annuler</button>
+                <button onclick="insertFormulaFromDialog('${editorId}')" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Insérer</button>
+            </div>
+        </div>
+    `;
+
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+
+    // Aperçu en temps réel
+    const input = modal.querySelector('#formula-input');
+    const preview = modal.querySelector('#formula-preview');
+
+    input.addEventListener('input', function() {
+        const converted = convertNotationToMathML(this.value);
+        preview.innerHTML = converted || '<em>Tapez une formule...</em>';
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([preview]);
+        }
+    });
+
+    input.focus();
+}
+
+function insertFormulaFromDialog(editorId) {
+    const modal = document.querySelector('.modal-overlay');
+    const input = modal.querySelector('#formula-input');
+    const editor = window.editorInstances[editorId];
+
+    if (editor && input.value.trim()) {
+        editor.model.change(writer => {
+            const insertPosition = editor.model.document.selection.getFirstPosition();
+            writer.insertText(input.value, insertPosition);
+        });
+    }
+
+    modal.remove();
+}
+
+// Fonctions de conversion notation personnalisée vers MathML
+function convertNotationToMathML(text) {
+    if (!text) return text;
+
+    // Nouvelle syntaxe pour expressions complexes [math:...]
+    text = text.replace(/\[math:([^\]]+)\]/g, function(match, expr) {
+        try {
+            return parseComplexMathExpression(expr);
+        } catch (e) {
+            console.error('Erreur parsing math:', e);
+            return match;
+        }
+    });
+
+    // Ancienne syntaxe maintenue pour compatibilité
+    return text
+        .replace(/\[frac:([^\]]+)\]/g, function(match, frac) {
+            if (frac.includes('/')) {
+                const [num, den] = frac.split('/');
+                return `<math class="math-inline"><mfrac><mn>${num.trim()}</mn><mn>${den.trim()}</mn></mfrac></math>`;
+            }
+            return match;
+        })
+        .replace(/\[pow:([^\]]+)\]/g, function(match, expr) {
+            if (expr.includes('^')) {
+                const [base, exp] = expr.split('^');
+                return `<math class="math-inline"><msup><mn>${base.trim()}</mn><mn>${exp.trim()}</mn></msup></math>`;
+            }
+            return match;
+        })
+        .replace(/\[sqrt:([^\]]+)\]/g, function(match, value) {
+            return `<math class="math-inline"><msqrt><mn>${value.trim()}</mn></msqrt></math>`;
+        })
+        .replace(/\[root:([^\]]+)\]/g, function(match, values) {
+            const parts = values.split(',');
+            if (parts.length === 2) {
+                const [radicande, indice] = parts;
+                return `<math class="math-inline"><mroot><mn>${radicande.trim()}</mn><mn>${indice.trim()}</mn></mroot></math>`;
+            }
+            return match;
+        })
+        .replace(/\[var:([^\]]+)\]/g, function(match, variable) {
+            if (variable.includes('_')) {
+                const [nom, indice] = variable.split('_');
+                return `<math class="math-inline"><msub><mi>${nom.trim()}</mi><mn>${indice.trim()}</mn></msub></math>`;
+            } else {
+                return `<math class="math-inline"><mi>${variable.trim()}</mi></math>`;
+            }
+        });
+}
+
+// Fonction pour parser les expressions mathématiques complexes
+function parseComplexMathExpression(expr) {
+    expr = expr.trim();
+
+    // Traiter les fonctions mathématiques de manière récursive
+    while (true) {
+        const match = expr.match(/(sqrt|pow|frac)\s*\(/);
+        if (!match) break;
+
+        const funcName = match[1];
+        const startPos = match.index;
+        const parenStart = expr.indexOf('(', startPos);
+        const parenEnd = findMatchingParen(expr, parenStart);
+
+        if (parenEnd === -1) break;
+
+        const funcContent = expr.substring(parenStart + 1, parenEnd);
+        let replacement = '';
+
+        if (funcName === 'sqrt') {
+            const parsedContent = parseSimpleExpression(funcContent);
+            replacement = `<msqrt>${parsedContent}</msqrt>`;
+        } else if (funcName === 'pow') {
+            const parts = splitFunctionArgs(funcContent);
+            if (parts.length === 2) {
+                const base = parseSimpleExpression(parts[0]);
+                const exp = parseSimpleExpression(parts[1]);
+                replacement = `<msup>${base}${exp}</msup>`;
+            }
+        } else if (funcName === 'frac') {
+            const parts = splitFunctionArgs(funcContent);
+            if (parts.length === 2) {
+                const num = parseSimpleExpression(parts[0]);
+                const den = parseSimpleExpression(parts[1]);
+                replacement = `<mfrac>${num}${den}</mfrac>`;
+            }
+        }
+
+        expr = expr.substring(0, startPos) + replacement + expr.substring(parenEnd + 1);
+    }
+
+    const finalParsed = parseSimpleExpression(expr);
+    return `<math class="math-inline">${finalParsed}</math>`;
+}
+
+function findMatchingParen(text, startPos) {
+    let count = 1;
+    let pos = startPos + 1;
+
+    while (pos < text.length && count > 0) {
+        if (text[pos] === '(') count++;
+        else if (text[pos] === ')') count--;
+        pos++;
+    }
+
+    return count === 0 ? pos - 1 : -1;
+}
+
+function splitFunctionArgs(content) {
+    const args = [];
+    let currentArg = '';
+    let parenCount = 0;
+
+    for (const char of content) {
+        if (char === ',' && parenCount === 0) {
+            args.push(currentArg.trim());
+            currentArg = '';
+        } else {
+            if (char === '(') parenCount++;
+            else if (char === ')') parenCount--;
+            currentArg += char;
+        }
+    }
+
+    if (currentArg.trim()) {
+        args.push(currentArg.trim());
+    }
+
+    return args;
+}
+
+function parseSimpleExpression(expr) {
+    expr = expr.trim();
+
+    if (!expr) return '<mi></mi>';
+
+    // Si c'est déjà du MathML, le retourner tel quel
+    if (expr.startsWith('<m') && expr.endsWith('>')) {
+        return expr;
+    }
+
+    // Si c'est un nombre
+    if (/^-?\d+(\.\d+)?$/.test(expr)) {
+        return `<mn>${expr}</mn>`;
+    }
+
+    // Si c'est une variable simple
+    if (/^[a-zA-Z]$/.test(expr)) {
+        return `<mi>${expr}</mi>`;
+    }
+
+    // Gérer les opérateurs + et -
+    for (const op of ['+', '-']) {
+        let parenCount = 0;
+        for (let i = 1; i < expr.length; i++) { // Commencer à 1 pour éviter le - initial
+            if (expr[i] === '(') parenCount++;
+            else if (expr[i] === ')') parenCount--;
+            else if (expr[i] === op && parenCount === 0) {
+                const left = parseSimpleExpression(expr.substring(0, i));
+                const right = parseSimpleExpression(expr.substring(i + 1));
+                return `${left}<mo>${op}</mo>${right}`;
+            }
+        }
+    }
+
+    // Gérer les opérateurs * et /
+    for (const op of ['*', '/']) {
+        let parenCount = 0;
+        for (let i = 0; i < expr.length; i++) {
+            if (expr[i] === '(') parenCount++;
+            else if (expr[i] === ')') parenCount--;
+            else if (expr[i] === op && parenCount === 0) {
+                const left = parseSimpleExpression(expr.substring(0, i));
+                const right = parseSimpleExpression(expr.substring(i + 1));
+                const opSymbol = op === '*' ? '×' : '÷';
+                return `${left}<mo>${opSymbol}</mo>${right}`;
+            }
+        }
+    }
+
+    // Si l'expression est entre parenthèses, les enlever
+    if (expr.startsWith('(') && expr.endsWith(')')) {
+        return parseSimpleExpression(expr.substring(1, expr.length - 1));
+    }
+
+    // Variables avec plusieurs caractères
+    if (/^[a-zA-Z_]\w*$/.test(expr)) {
+        return `<mi>${expr}</mi>`;
+    }
+
+    // Par défaut
+    return `<mi>${expr}</mi>`;
+}
+
+function convertMathMLToNotation(text) {
+    if (!text) return text;
+
+    // Conversion inverse simplifiée pour l'enregistrement
+    return text
+        .replace(/<math[^>]*><mfrac><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mfrac><\/math>/g, '[frac:$1/$2]')
+        .replace(/<math[^>]*><msup><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/msup><\/math>/g, '[pow:$1^$2]')
+        .replace(/<math[^>]*><msqrt><mn>([^<]+)<\/mn><\/msqrt><\/math>/g, '[sqrt:$1]')
+        .replace(/<math[^>]*><mroot><mn>([^<]+)<\/mn><mn>([^<]+)<\/mn><\/mroot><\/math>/g, '[root:$1,$2]')
+        .replace(/<math[^>]*><msub><mi>([^<]+)<\/mi><mn>([^<]+)<\/mn><\/msub><\/math>/g, '[var:$1_$2]')
+        .replace(/<math[^>]*><mi>([^<]+)<\/mi><\/math>/g, '[var:$1]');
+}
+
+// Charger la question et pré-remplir le formulaire
+function chargerQuestion() {
+    if (!questionId) return;
+
+    fetch(`/admin/api/question/${questionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.question) {
+                const q = data.question;
+                document.getElementById('question_id').value = q.id;
+                document.getElementById('niveau').value = q.niveau;
+                loadChapitres(q.niveau, q.chapitre);
+                document.getElementById('difficulte').value = q.difficulte;
+                document.getElementById('reponse_correcte').value = q.reponse_correcte;
+
+                // Attendre que les éditeurs soient initialisés avant de charger les données
+                setTimeout(() => {
+                    if (window.editorInstances['probleme']) {
+                        window.editorInstances['probleme'].setData(q.probleme || '');
+                    }
+                    if (q.options && q.options.length === 4) {
+                        if (window.editorInstances['option_a']) window.editorInstances['option_a'].setData(q.options[0] || '');
+                        if (window.editorInstances['option_b']) window.editorInstances['option_b'].setData(q.options[1] || '');
+                        if (window.editorInstances['option_c']) window.editorInstances['option_c'].setData(q.options[2] || '');
+                        if (window.editorInstances['option_d']) window.editorInstances['option_d'].setData(q.options[3] || '');
+                    }
+                    if (window.editorInstances['explication']) {
+                        window.editorInstances['explication'].setData(q.explication || '');
+                    }
+                }, 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement de la question:', error);
+        });
+}
+
+// Charger les chapitres selon le niveau sélectionné
+function loadChapitres(niveau, selected) {
+    const chapitreSelect = document.getElementById('chapitre');
+
+    if (!niveau) {
+        chapitreSelect.innerHTML = '<option value="">Sélectionnez d\'abord un niveau</option>';
+        return;
+    }
+
+    // Afficher le chargement
+    chapitreSelect.innerHTML = '<option value="">Chargement des chapitres...</option>';
+
+    // Appel AJAX pour récupérer les chapitres
+    fetch(`/admin/api/chapitres/${niveau}`)
+        .then(response => response.json())
+        .then(data => {
+            chapitreSelect.innerHTML = '<option value="">Sélectionnez un chapitre</option>';
+
+            if (data.chapitres && data.chapitres.length > 0) {
+                data.chapitres.forEach(chapitre => {
+                    const option = document.createElement('option');
+                    option.value = chapitre.nom;
+                    option.textContent = chapitre.titre;
+                    chapitreSelect.appendChild(option);
+                });
+
+                if (selected) {
+                    chapitreSelect.value = selected;
+                }
+            } else {
+                chapitreSelect.innerHTML = '<option value="">Aucun chapitre disponible</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des chapitres:', error);
+            chapitreSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        });
+}
+
+// Initialiser CKEditor pour tous les éditeurs
+document.addEventListener('DOMContentLoaded', function() {
+    // Charger les chapitres au changement de niveau
+    document.getElementById('niveau').addEventListener('change', function() {
+        loadChapitres(this.value);
+    });
+
+    // Initialiser les éditeurs après un délai pour s'assurer que CKEditor est prêt
+    setTimeout(function() {
+        document.querySelectorAll('.math-editor').forEach(function(element) {
+            if (element.id) {
+                initMathEditor(element.id);
+            }
+        });
+
+        // Charger les données de la question après initialisation des éditeurs
+        setTimeout(chargerQuestion, 500);
+    }, 500);
+});
+
+// Aperçu de la question
+function previewQuestion() {
+    const formData = new FormData(document.getElementById('questionForm'));
+    const data = {};
+
+    // Récupérer le contenu des éditeurs CKEditor
+    Object.keys(window.editorInstances).forEach(editorId => {
+        const editor = window.editorInstances[editorId];
+        if (editor) {
+            // Récupérer le contenu et le convertir en MathML pour l'aperçu
+            const rawContent = editor.getData();
+            data[editorId] = convertNotationToMathML(rawContent);
+        }
+    });
+
+    // Compléter avec les autres champs
+    for (let [key, value] of formData.entries()) {
+        if (!data[key]) {
+            data[key] = value;
+        }
+    }
+
+    // Générer l'aperçu avec le contenu converti
+    const previewContent = `
+        <div class="mb-4">
+            <h6 class="text-primary">📝 Problème :</h6>
+            <div class="alert alert-light math-content">${data.probleme || '<em>Énoncé vide</em>'}</div>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="text-secondary">Choix de réponses :</h6>
+            <div class="list-group">
+                <div class="list-group-item math-content">
+                    <strong>A.</strong> ${data.option_a || '<em>Option A vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>B.</strong> ${data.option_b || '<em>Option B vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>C.</strong> ${data.option_c || '<em>Option C vide</em>'}
+                </div>
+                <div class="list-group-item math-content">
+                    <strong>D.</strong> ${data.option_d || '<em>Option D vide</em>'}
+                </div>
+            </div>
+        </div>
+
+        ${data.explication ? `
+            <div class="mb-4">
+                <h6 class="text-info">💡 Explication :</h6>
+                <div class="alert alert-info math-content">${data.explication}</div>
+            </div>
+        ` : ''}
+
+        <div class="row">
+            <div class="col-md-4">
+                <strong>Niveau :</strong> ${data.niveau || 'Non défini'}
+            </div>
+            <div class="col-md-4">
+                <strong>Chapitre :</strong> ${data.chapitre || 'Non défini'}
+            </div>
+            <div class="col-md-4">
+                <strong>Difficulté :</strong> ${data.difficulte || 'Non définie'}
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <span class="badge ${data.reponse_correcte !== '' ? 'bg-success' : 'bg-warning'}">
+                Réponse correcte : ${data.reponse_correcte !== '' ? ['A', 'B', 'C', 'D'][parseInt(data.reponse_correcte)] : 'Non définie'}
+            </span>
+        </div>
+    `;
+
+    // Injecter le contenu dans l'aperçu
+    document.getElementById('preview-content').innerHTML = previewContent;
+    document.getElementById('preview-section').style.display = 'block';
+
+    // Traiter MathJax si nécessaire pour le rendu des nouvelles formules
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([document.getElementById('preview-content')])
+            .catch(function (err) {
+                console.log('MathJax error:', err);
+            });
+    }
+
+    // Faire défiler vers l'aperçu
+    document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Réinitialiser le formulaire
+function resetForm() {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ? Les modifications non sauvegardées seront perdues.')) {
+        // Recharger les données originales de la question
+        chargerQuestion();
+        document.getElementById('preview-section').style.display = 'none';
+    }
+}
+
+// Soumission du formulaire
+document.getElementById('questionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Récupérer les données des éditeurs CKEditor
+    const formData = {
+        question_id: document.getElementById('question_id').value,
+        niveau: document.getElementById('niveau').value,
+        chapitre: document.getElementById('chapitre').value,
+        reponse_correcte: document.getElementById('reponse_correcte').value,
+        difficulte: document.getElementById('difficulte').value
+    };
+
+    // Ajouter le contenu des éditeurs
+    Object.keys(window.editorInstances).forEach(editorId => {
+        const editor = window.editorInstances[editorId];
+        if (editor) {
+            if (editorId === 'probleme') {
+                formData['probleme'] = editor.getData();
+            } else if (editorId.startsWith('option_')) {
+                formData[editorId] = editor.getData();
+            } else if (editorId === 'explication') {
+                formData['explication'] = editor.getData();
+            }
+        }
+    });
+
+    // Validation
+    const requiredFields = ['niveau', 'chapitre', 'probleme', 'option_a', 'option_b', 'option_c', 'option_d', 'reponse_correcte', 'difficulte'];
+    const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+
+    if (missingFields.length > 0) {
+        alert('Veuillez remplir tous les champs obligatoires : ' + missingFields.join(', '));
+        return;
+    }
+
+    // Envoyer les données via PUT pour modification
+    fetch(`/admin/api/question/${formData.question_id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Question modifiée avec succès !');
+            window.location.href = "{{ url_for('admin') }}";
+        } else {
+            alert('Erreur lors de la modification : ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de communication avec le serveur.');
+    });
+});
+</script>
+{% endblock %}

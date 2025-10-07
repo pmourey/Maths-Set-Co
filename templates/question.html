@@ -74,7 +74,8 @@
                 {% for i in range(question.options|length) %}
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="radio" name="reponse"
-                           id="option{{ i }}" value="{{ i }}" required>
+                           id="option{{ i }}" value="{{ i }}" required
+                           {% if session.get('reponses_dict', {}).get((question_num - 1)|string, {}).get('reponse_utilisateur') == i %}checked{% endif %}>
                     <label class="form-check-label fs-6 math-content" for="option{{ i }}">
                         <span class="badge bg-light text-dark me-2">{{ ['A', 'B', 'C', 'D'][i] }}</span>
                         {{ question.options[i]|mathml|safe }}
@@ -83,24 +84,42 @@
                 {% endfor %}
             </div>
 
-            <div class="d-flex justify-content-between align-items-center">
-                {% if session.get('mode') == 'chapitre' %}
-                <button type="button" class="btn btn-outline-secondary" onclick="confirmerSortieTest('chapitre')">
-                    ← Retour aux chapitres {{ niveau|upper }}
-                </button>
-                {% else %}
-                <button type="button" class="btn btn-outline-secondary" onclick="confirmerSortieTest('niveau')">
-                    ← Retour à l'accueil
-                </button>
-                {% endif %}
-
-                <button type="submit" class="btn btn-primary btn-lg">
-                    {% if question_num == total_questions %}
-                        Terminer le test →
+            <div class="row mt-4">
+                <!-- Bouton Retour à gauche -->
+                <div class="col-md-4 d-flex justify-content-start">
+                    {% if session.get('mode') == 'chapitre' %}
+                    <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="confirmerSortieTest('chapitre')" title="Retour aux chapitres">
+                        <i class="fas fa-home me-2"></i>Retour aux chapitres
+                    </button>
                     {% else %}
-                        Question suivante →
+                    <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="confirmerSortieTest('niveau')" title="Retour à l'accueil">
+                        <i class="fas fa-home me-2"></i>Retour à l'accueil
+                    </button>
                     {% endif %}
-                </button>
+                </div>
+
+                <!-- Bouton Question précédente au centre -->
+                <div class="col-md-4 d-flex justify-content-center">
+                    {% if question_num > 1 %}
+                    <a href="{{ url_for('question_precedente') }}" class="btn btn-outline-primary btn-lg px-4" title="Revenir à la question précédente">
+                        <i class="fas fa-arrow-left me-2"></i>Question précédente
+                    </a>
+                    {% else %}
+                    <!-- Espace réservé pour maintenir l'alignement -->
+                    <div class="invisible btn btn-lg px-4">Placeholder</div>
+                    {% endif %}
+                </div>
+
+                <!-- Bouton Question suivante à droite -->
+                <div class="col-md-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-4" title="{% if question_num == total_questions %}Terminer le test{% else %}Passer à la question suivante{% endif %}">
+                        {% if question_num == total_questions %}
+                            <i class="fas fa-check-circle me-2"></i>Terminer le test
+                        {% else %}
+                            Question suivante<i class="fas fa-arrow-right ms-2"></i>
+                        {% endif %}
+                    </button>
+                </div>
             </div>
         </form>
     </div>

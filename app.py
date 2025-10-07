@@ -171,6 +171,7 @@ def choisir_niveau(niveau):
     session['score'] = 0
     session['question_courante'] = 0
     session['reponses'] = []
+    session['reponses_dict'] = {}  # Nouveau dictionnaire pour navigation libre
     session.pop('mode', None)
     session.pop('chapitre', None)
 
@@ -226,6 +227,17 @@ def question():
                          niveau=niveau,
                          contexte=contexte)
 
+@app.route('/question_precedente')
+def question_precedente():
+    if 'niveau' not in session or session['question_courante'] <= 0:
+        return redirect(url_for('index'))
+
+    # Simplement décrémenter le numéro de question sans supprimer les réponses
+    session['question_courante'] -= 1
+
+
+    return redirect(url_for('question'))
+
 @app.route('/repondre', methods=['POST'])
 def repondre():
     if 'niveau' not in session:
@@ -246,14 +258,27 @@ def repondre():
     reponse_utilisateur = int(request.form.get('reponse', -1))
     est_correcte = reponse_utilisateur == question['reponse_correcte']
 
-    if est_correcte:
-        session['score'] += 1
+    # Initialiser le dictionnaire de réponses s'il n'existe pas
+    if 'reponses_dict' not in session:
+        session['reponses_dict'] = {}
 
-    session['reponses'].append({
+    # Sauvegarder la réponse avec l'index de la question comme clé
+    session['reponses_dict'][str(question_num)] = {
         'question': question,
         'reponse_utilisateur': reponse_utilisateur,
         'correcte': est_correcte
-    })
+    }
+
+    # Recalculer le score total basé sur toutes les réponses données
+    session['score'] = sum(1 for rep in session['reponses_dict'].values() if rep['correcte'])
+
+    # Reconstruire la liste des réponses pour compatibilité avec les résultats
+    session['reponses'] = []
+    for i in range(len(questions_niveau)):
+        if str(i) in session['reponses_dict']:
+            session['reponses'].append(session['reponses_dict'][str(i)])
+        else:
+            break  # Arrêter à la première question non répondue pour les résultats
 
     session['question_courante'] += 1
 
@@ -1012,6 +1037,20 @@ def supprimer_tests_trous():
 def admin_editor():
     """Page d'édition de questions avec éditeur WYSIWYG et support MathML"""
     return render_template('admin_editor.html')
+
+@app.route('/admin/editor/<int:question_id>')
+@login_required
+@qcm_admin_required
+def admin_editor_question(question_id):
+    """Page d'édition individuelle d'une question avec éditeur MathML Simple"""
+    return render_template('editor.html', question_id=question_id)
+
+@app.route('/admin/mathquill-editor')
+@login_required
+@qcm_admin_required
+def admin_mathquill_editor():
+    """Éditeur MathML avancé avec MathQuill pour expressions complexes imbriquées"""
+    return render_template('mathquill_editor.html')
 
 @app.route('/demo-mathml')
 def demo_mathml():
