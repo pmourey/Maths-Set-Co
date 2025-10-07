@@ -7,12 +7,14 @@ import time
 
 from models import db, Niveau, Chapitre, Question, QuestionsATrous
 from services import QCMService
-from mathml_utils import mathml_filter, generate_mathml_examples
+from mathml_utils import mathml_filter, mathml_clean_filter, generate_mathml_examples, clean_display_filter
 
 app = Flask(__name__, static_folder='static')
 
-# Enregistrer le filtre MathML
+# Enregistrer les filtres MathML
 app.jinja_env.filters['mathml'] = mathml_filter
+app.jinja_env.filters['mathml_clean'] = mathml_clean_filter
+app.jinja_env.filters['clean_display'] = clean_display_filter
 
 load_dotenv(os.path.join(app.instance_path, '.env'))  # charge le fichier .env dans le dossier instance/
 # Clé secrète pour les sessions (chargée depuis .env)

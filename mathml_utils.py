@@ -350,6 +350,52 @@ def mathml_filter(text):
         return Markup(converted)
     return text
 
+def clean_display_filter(text):
+    """
+    Filtre Jinja2 pour nettoyer les balises HTML parasites à l'affichage
+    Supprime les balises <p> et <br> de début/fin tout en préservant MathML
+    """
+    if not text:
+        return text
+
+    # Convertir en string si ce n'est pas déjà fait
+    text = str(text)
+
+    # Supprimer les balises <p> qui encapsulent tout le contenu
+    text = re.sub(r'^<p>(.*)</p>$', r'\1', text, flags=re.DOTALL | re.IGNORECASE)
+
+    # Supprimer les balises <p> vides en début/fin
+    text = re.sub(r'^(<p>\s*</p>\s*)+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'(<p>\s*</p>\s*)+$', '', text, flags=re.IGNORECASE)
+
+    # Supprimer les <br> en début/fin
+    text = re.sub(r'^(<br\s*/?>\s*)+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'(<br\s*/?>\s*)+$', '', text, flags=re.IGNORECASE)
+
+    # Supprimer les espaces HTML en début/fin
+    text = re.sub(r'^(&nbsp;\s*)+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'(&nbsp;\s*)+$', '', text, flags=re.IGNORECASE)
+
+    # Nettoyer les espaces en début/fin
+    text = text.strip()
+
+    return Markup(text)
+
+def mathml_clean_filter(text):
+    """
+    Filtre combiné : convertit les notations mathématiques ET nettoie l'affichage
+    """
+    if not text:
+        return text
+
+    # D'abord convertir les notations mathématiques
+    converted = mathml_filter(text)
+
+    # Puis nettoyer l'affichage
+    cleaned = clean_display_filter(converted)
+
+    return cleaned
+
 # Exemples d'utilisation pour la documentation
 EXAMPLES = {
     "fraction": "Calculer [frac:3/4] + [frac:1/2]",
