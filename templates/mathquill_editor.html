@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur MathML Avancé</title>
+
+    <!-- MathLive CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive.core.css">
+    <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive.css">
+
+    <!-- Bootstrap pour le style -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .math-field {
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 60px;
+            background: #f8f9fa;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .math-field.focused {
+            border-color: #0056b3;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .toolbar {
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .math-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .math-btn:hover {
+            background: #1565c0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .preview-area {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            min-height: 100px;
+        }
+
+        .output-code {
+            background: #263238;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .complex-examples {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .example-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .example-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">🧮 Éditeur MathML Avancé avec MathQuill</h3>
+                        <small>Supporte les expressions complexes imbriquées</small>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Barre d'outils avancée -->
+                        <div class="toolbar">
+                            <h5>🛠️ Outils mathématiques :</h5>
+
+                            <div class="mb-3">
+                                <strong>Fractions et Racines :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\frac{ }{ }')" title="Fraction">a/b</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sqrt{}')" title="Racine carrée">√</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sqrt[]{}')" title="Racine n-ième">ⁿ√</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sqrt{\\frac{ }{ }}')" title="Racine de fraction">√(a/b)</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sqrt[3]{}')" title="Racine cubique">∛</button>
+                                <button class="math-btn" onclick="insertSymbol('\\frac{1}{}')" title="Inverse">1/x</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('mixed_number')" title="Nombre mixte">a b/c</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Puissances et Indices :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('^{}')" title="Exposant">x²</button>
+                                <button class="math-btn" onclick="insertSymbol('_{}')" title="Indice">x₁</button>
+                                <button class="math-btn" onclick="insertSymbol('^{}_{}')" title="Exposant et indice">x₁²</button>
+                                <button class="math-btn" onclick="insertSymbol('\\left({}\\right)^{}')" title="Puissance de parenthèses">(...)²</button>
+                                <button class="math-btn" onclick="insertSymbol('^{2}')" title="Au carré">x²</button>
+                                <button class="math-btn" onclick="insertSymbol('^{3}')" title="Au cube">x³</button>
+                                <button class="math-btn" onclick="insertSymbol('^{-1}')" title="Puissance -1">x⁻¹</button>
+                                <button class="math-btn" onclick="insertSymbol('e^{}')" title="Exponentielle">eˣ</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Fonctions trigonométriques :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\sin({})')" title="Sinus">sin</button>
+                                <button class="math-btn" onclick="insertSymbol('\\cos({})')" title="Cosinus">cos</button>
+                                <button class="math-btn" onclick="insertSymbol('\\tan({})')" title="Tangente">tan</button>
+                                <button class="math-btn" onclick="insertSymbol('\\arcsin({})')" title="Arc sinus">arcsin</button>
+                                <button class="math-btn" onclick="insertSymbol('\\arccos({})')" title="Arc cosinus">arccos</button>
+                                <button class="math-btn" onclick="insertSymbol('\\arctan({})')" title="Arc tangente">arctan</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sec({})')" title="Sécante">sec</button>
+                                <button class="math-btn" onclick="insertSymbol('\\csc({})')" title="Cosécante">csc</button>
+                                <button class="math-btn" onclick="insertSymbol('\\cot({})')" title="Cotangente">cot</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Logarithmes et exponentielles :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\log({})')" title="Logarithme">log</button>
+                                <button class="math-btn" onclick="insertSymbol('\\ln({})')" title="Logarithme naturel">ln</button>
+                                <button class="math-btn" onclick="insertSymbol('\\log_{ {} }')" title="Logarithme en base">log₍ₓ₎</button>
+                                <button class="math-btn" onclick="insertSymbol('\\log_{10}({})')" title="Logarithme base 10">log₁₀</button>
+                                <button class="math-btn" onclick="insertSymbol('\\log_{2}({})')" title="Logarithme base 2">log₂</button>
+                                <button class="math-btn" onclick="insertSymbol('e')" title="Nombre e">e</button>
+                                <button class="math-btn" onclick="insertSymbol('\\exp({})')" title="Exponentielle">exp</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Lettres grecques :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\alpha')" title="Alpha">α</button>
+                                <button class="math-btn" onclick="insertSymbol('\\beta')" title="Bêta">β</button>
+                                <button class="math-btn" onclick="insertSymbol('\\gamma')" title="Gamma">γ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\delta')" title="Delta">δ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\epsilon')" title="Epsilon">ε</button>
+                                <button class="math-btn" onclick="insertSymbol('\\theta')" title="Thêta">θ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\lambda')" title="Lambda">λ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mu')" title="Mu">μ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\pi')" title="Pi">π</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sigma')" title="Sigma">σ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\phi')" title="Phi">φ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\omega')" title="Oméga">ω</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Symboles de comparaison :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('=')" title="Égal">=</button>
+                                <button class="math-btn" onclick="insertSymbol('\\neq')" title="Différent">≠</button>
+                                <button class="math-btn" onclick="insertSymbol('<')" title="Inférieur"><</button>
+                                <button class="math-btn" onclick="insertSymbol('>')" title="Supérieur">></button>
+                                <button class="math-btn" onclick="insertSymbol('\\leq')" title="Inférieur ou égal">≤</button>
+                                <button class="math-btn" onclick="insertSymbol('\\geq')" title="Supérieur ou égal">≥</button>
+                                <button class="math-btn" onclick="insertSymbol('\\approx')" title="Approximativement égal">≈</button>
+                                <button class="math-btn" onclick="insertSymbol('\\equiv')" title="Équivalent">≡</button>
+                                <button class="math-btn" onclick="insertSymbol('\\propto')" title="Proportionnel">∝</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Calcul différentiel et intégral :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\frac{d}{dx}')" title="Dérivée">d/dx</button>
+                                <button class="math-btn" onclick="insertSymbol('\\frac{\\partial}{\\partial x}')" title="Dérivée partielle">∂/∂x</button>
+                                <button class="math-btn" onclick="insertSymbol('\\int')" title="Intégrale">∫</button>
+                                <button class="math-btn" onclick="insertSymbol('\\int_{ }^{ }')" title="Intégrale définie">∫ₐᵇ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\oint')" title="Intégrale de contour">∮</button>
+                                <button class="math-btn" onclick="insertSymbol('\\iint')" title="Intégrale double">∬</button>
+                                <button class="math-btn" onclick="insertSymbol('\\iiint')" title="Intégrale triple">∭</button>
+                                <button class="math-btn" onclick="insertSymbol('\\lim_{ \\to }')" title="Limite">lim</button>
+                                <button class="math-btn" onclick="insertSymbol('\\nabla')" title="Nabla">∇</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Sommes et produits :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\sum')" title="Somme">Σ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sum_{i=1}^{n}')" title="Somme indexée">Σᵢ₌₁ⁿ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\prod')" title="Produit">Π</button>
+                                <button class="math-btn" onclick="insertSymbol('\\prod_{i=1}^{n}')" title="Produit indexé">Πᵢ₌₁ⁿ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\coprod')" title="Coproduit">∐</button>
+                                <button class="math-btn" onclick="insertSymbol('\\bigcup')" title="Union">⋃</button>
+                                <button class="math-btn" onclick="insertSymbol('\\bigcap')" title="Intersection">⋂</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Matrices et vecteurs :</strong><br>
+                                <button class="math-btn" onclick="insertComplexSymbol('matrix_2x2')" title="Matrice 2×2">Matrix 2×2</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('matrix_3x3')" title="Matrice 3×3">Matrix 3×3</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('vector_2d')" title="Vecteur 2D">Vector 2D</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('vector_3d')" title="Vecteur 3D">Vector 3D</button>
+                                <button class="math-btn" onclick="insertSymbol('\\det')" title="Déterminant">det</button>
+                                <button class="math-btn" onclick="insertSymbol('\\vec{}')" title="Vecteur">→</button>
+                                <button class="math-btn" onclick="insertSymbol('\\hat{}')" title="Vecteur unitaire">^</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Théorie des ensembles :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\in')" title="Appartient">∈</button>
+                                <button class="math-btn" onclick="insertSymbol('\\notin')" title="N'appartient pas">∉</button>
+                                <button class="math-btn" onclick="insertSymbol('\\subset')" title="Sous-ensemble">⊂</button>
+                                <button class="math-btn" onclick="insertSymbol('\\subseteq')" title="Sous-ensemble ou égal">⊆</button>
+                                <button class="math-btn" onclick="insertSymbol('\\supset')" title="Sur-ensemble">⊃</button>
+                                <button class="math-btn" onclick="insertSymbol('\\cup')" title="Union">∪</button>
+                                <button class="math-btn" onclick="insertSymbol('\\cap')" title="Intersection">∩</button>
+                                <button class="math-btn" onclick="insertSymbol('\\emptyset')" title="Ensemble vide">∅</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{N}')" title="Entiers naturels">ℕ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{Z}')" title="Entiers relatifs">ℤ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{Q}')" title="Rationnels">ℚ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{R}')" title="Réels">ℝ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{C}')" title="Complexes">ℂ</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Logique et quantificateurs :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\forall')" title="Pour tout">∀</button>
+                                <button class="math-btn" onclick="insertSymbol('\\exists')" title="Il existe">∃</button>
+                                <button class="math-btn" onclick="insertSymbol('\\nexists')" title="Il n'existe pas">∄</button>
+                                <button class="math-btn" onclick="insertSymbol('\\land')" title="Et logique">∧</button>
+                                <button class="math-btn" onclick="insertSymbol('\\lor')" title="Ou logique">∨</button>
+                                <button class="math-btn" onclick="insertSymbol('\\neg')" title="Négation">¬</button>
+                                <button class="math-btn" onclick="insertSymbol('\\implies')" title="Implique">⇒</button>
+                                <button class="math-btn" onclick="insertSymbol('\\iff')" title="Si et seulement si">⇔</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Géométrie :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\angle')" title="Angle">∠</button>
+                                <button class="math-btn" onclick="insertSymbol('\\measuredangle')" title="Angle mesuré">∡</button>
+                                <button class="math-btn" onclick="insertSymbol('\\triangle')" title="Triangle">△</button>
+                                <button class="math-btn" onclick="insertSymbol('\\square')" title="Carré">□</button>
+                                <button class="math-btn" onclick="insertSymbol('\\parallel')" title="Parallèle">∥</button>
+                                <button class="math-btn" onclick="insertSymbol('\\perp')" title="Perpendiculaire">⊥</button>
+                                <button class="math-btn" onclick="insertSymbol('\\cong')" title="Congru">≅</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sim')" title="Similaire">∼</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Probabilités et statistiques :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('P({})')" title="Probabilité">P(A)</button>
+                                <button class="math-btn" onclick="insertSymbol('P({}|{})')" title="Probabilité conditionnelle">P(A|B)</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{E}[{}]')" title="Espérance">E[X]</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{Var}({})')" title="Variance">Var(X)</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sigma^2')" title="Variance sigma">σ²</button>
+                                <button class="math-btn" onclick="insertSymbol('\\bar{}')" title="Moyenne">x̄</button>
+                                <button class="math-btn" onclick="insertSymbol('\\binom{ }{ }')" title="Coefficient binomial">C(n,k)</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Flèches et symboles divers :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\rightarrow')" title="Flèche droite">→</button>
+                                <button class="math-btn" onclick="insertSymbol('\\leftarrow')" title="Flèche gauche">←</button>
+                                <button class="math-btn" onclick="insertSymbol('\\leftrightarrow')" title="Flèche double">↔</button>
+                                <button class="math-btn" onclick="insertSymbol('\\Rightarrow')" title="Double flèche droite">⇒</button>
+                                <button class="math-btn" onclick="insertSymbol('\\Leftarrow')" title="Double flèche gauche">⇐</button>
+                                <button class="math-btn" onclick="insertSymbol('\\infty')" title="Infini">∞</button>
+                                <button class="math-btn" onclick="insertSymbol('\\aleph')" title="Aleph">ℵ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\partial')" title="Dérivée partielle">∂</button>
+                                <button class="math-btn" onclick="insertSymbol('\\hbar')" title="H-barre">ℏ</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Systèmes d'équations et fonctions par morceaux :</strong><br>
+                                <button class="math-btn" onclick="insertComplexSymbol('system_equations')" title="Système d'équations">Système</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('piecewise_function')" title="Fonction par morceaux">f(x) par morceaux</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('determinant_2x2')" title="Déterminant 2×2">|A|</button>
+                                <button class="math-btn" onclick="insertSymbol('\\begin{align} {} \\\\ {} \\end{align}')" title="Alignement d'équations">Align</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Formules célèbres :</strong><br>
+                                <button class="math-btn" onclick="insertComplexSymbol('quadratic_formula')" title="Formule quadratique">x = (-b±√...)/2a</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('binomial_theorem')" title="Théorème binomial">(a+b)ⁿ</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('derivative_chain_rule')" title="Règle de dérivation en chaîne">d/dx[f(g(x))]</button>
+                                <button class="math-btn" onclick="insertComplexSymbol('integral_by_parts')" title="Intégration par parties">∫u dv</button>
+                                <button class="math-btn" onclick="loadExample('e^{i\\pi} + 1 = 0')" title="Formule d'Euler">e^(iπ)+1=0</button>
+                                <button class="math-btn" onclick="loadExample('\\sin^2(x) + \\cos^2(x) = 1')" title="Identité trigonométrique">sin²+cos²=1</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Physique et chimie :</strong><br>
+                                <button class="math-btn" onclick="loadExample('E = mc^2')" title="Relativité d'Einstein">E=mc²</button>
+                                <button class="math-btn" onclick="loadExample('F = ma')" title="Loi de Newton">F=ma</button>
+                                <button class="math-btn" onclick="loadExample('PV = nRT')" title="Gaz parfait">PV=nRT</button>
+                                <button class="math-btn" onclick="loadExample('\\Delta G = \\Delta H - T\\Delta S')" title="Énergie de Gibbs">ΔG=ΔH-TΔS</button>
+                                <button class="math-btn" onclick="loadExample('\\lambda = \\frac{h}{p}')" title="Longueur d'onde de de Broglie">λ=h/p</button>
+                                <button class="math-btn" onclick="loadExample('\\psi(x,t) = Ae^{i(kx-\\omega t)}')" title="Fonction d'onde">ψ(x,t)</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Analyse complexe :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\mathbb{C}')" title="Nombres complexes">ℂ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{Re}({})')" title="Partie réelle">Re(z)</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{Im}({})')" title="Partie imaginaire">Im(z)</button>
+                                <button class="math-btn" onclick="insertSymbol('\\overline{}')" title="Conjugué complexe">z̄</button>
+                                <button class="math-btn" onclick="insertSymbol('|{}|')" title="Module">|z|</button>
+                                <button class="math-btn" onclick="insertSymbol('\\arg({})')" title="Argument">arg(z)</button>
+                                <button class="math-btn" onclick="loadExample('z = re^{i\\theta}')" title="Forme exponentielle">z=re^(iθ)</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Topologie et analyse fonctionnelle :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{L}')" title="Espace de fonctions">ℒ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{H}')" title="Espace de Hilbert">ℋ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{B}')" title="Espace de Banach">ℬ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\|{}\\|')" title="Norme">‖x‖</button>
+                                <button class="math-btn" onclick="insertSymbol('\\langle {}, {} \\rangle')" title="Produit scalaire">⟨x,y⟩</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{O}')" title="Notation O">𝒪</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Transformées et séries :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{F}[{}]')" title="Transformée de Fourier">ℱ[f]</button>
+                                <button class="math-btn" onclick="insertSymbol('\\mathcal{L}[{}]')" title="Transformée de Laplace">ℒ[f]</button>
+                                <button class="math-btn" onclick="insertSymbol('\\sum_{n=0}^{\\infty}')" title="Série infinie">Σ∞</button>
+                                <button class="math-btn" onclick="loadExample('\\sum_{n=0}^{\\infty} \\frac{x^n}{n!} = e^x')" title="Série de Taylor exp">Σxⁿ/n!=eˣ</button>
+                                <button class="math-btn" onclick="loadExample('\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}')" title="Fonction zêta">ζ(s)</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Opérateurs et notations avancées :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\circ')" title="Composition">∘</button>
+                                <button class="math-btn" onclick="insertSymbol('\\ast')" title="Convolution">∗</button>
+                                <button class="math-btn" onclick="insertSymbol('\\star')" title="Produit étoile">⋆</button>
+                                <button class="math-btn" onclick="insertSymbol('\\oplus')" title="Somme directe">⊕</button>
+                                <button class="math-btn" onclick="insertSymbol('\\otimes')" title="Produit tensoriel">⊗</button>
+                                <button class="math-btn" onclick="insertSymbol('\\triangleq')" title="Défini par">≜</button>
+                                <button class="math-btn" onclick="insertSymbol('\\doteq')" title="Égal par définition">≐</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Constantes mathématiques :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\pi')" title="Pi">π</button>
+                                <button class="math-btn" onclick="insertSymbol('e')" title="Nombre e">e</button>
+                                <button class="math-btn" onclick="insertSymbol('\\phi')" title="Nombre d'or">φ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\gamma')" title="Constante d'Euler-Mascheroni">γ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\infty')" title="Infini">∞</button>
+                                <button class="math-btn" onclick="insertSymbol('i')" title="Unité imaginaire">i</button>
+                                <button class="math-btn" onclick="loadExample('\\sqrt{2}')" title="Racine de 2">√2</button>
+                                <button class="math-btn" onclick="loadExample('\\frac{1+\\sqrt{5}}{2}')" title="Nombre d'or exact">(1+√5)/2</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Notation scientifique et unités :</strong><br>
+                                <button class="math-btn" onclick="insertSymbol('\\times 10^{}')" title="Notation scientifique">×10ⁿ</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{ m}')" title="Mètres">m</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{ kg}')" title="Kilogrammes">kg</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{ s}')" title="Secondes">s</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{ J}')" title="Joules">J</button>
+                                <button class="math-btn" onclick="insertSymbol('\\text{ W}')" title="Watts">W</button>
+                                <button class="math-btn" onclick="insertSymbol('\\degree')" title="Degrés">°</button>
+                                <button class="math-btn" onclick="insertSymbol('^\\circ\\text{C}')" title="Celsius">°C</button>
+                            </div>
+                        </div>
+
+                        <!-- Zone d'édition -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>📝 Éditeur d'expression :</strong></label>
+                            <math-field id="math-field" class="math-field" virtual-keyboard-mode="manual"></math-field>
+                            <small class="text-muted">Cliquez dans la zone pour commencer à taper. Utilisez les boutons ci-dessus ou tapez directement en LaTeX ou MathML.</small>
+                        </div>
+
+                        <!-- Exemples complexes -->
+                        <div class="complex-examples">
+                            <h6>🎯 Exemples d'expressions complexes :</h6>
+                            <p><strong>Cliquez sur un exemple pour le charger :</strong></p>
+                            <button class="example-btn" onclick="loadExample('\\sqrt{1 + \\sqrt{x}}')">√(1 + √x)</button>
+                            <button class="example-btn" onclick="loadExample('\\frac{\\sqrt{a^2 + b^2}}{2c}')">√(a²+b²)/(2c)</button>
+                            <button class="example-btn" onclick="loadExample('\\left(\\frac{a+b}{c-d}\\right)^{\\frac{1}{2}}')">((a+b)/(c-d))^(1/2)</button>
+                            <button class="example-btn" onclick="loadExample('\\sqrt{\\frac{\\sqrt{x+1}}{\\sqrt{y-1}}}')">√(√(x+1)/√(y-1))</button>
+                            <button class="example-btn" onclick="loadExample('\\frac{\\sqrt{a^2+b^2+c^2}}{\\sqrt[3]{x^3+y^3}}')">√(a²+b²+c²)/∛(x³+y³)</button>
+                            <button class="example-btn" onclick="loadExample('x_{1}^{2} + x_{2}^{2} = \\sqrt{a^{2} + b^{2}}')">x₁² + x₂² = √(a²+b²)</button>
+                        </div>
+
+                        <!-- Aperçu -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>🔍 Aperçu rendu :</strong></label>
+                                <div id="preview" class="preview-area">
+                                    <em>L'aperçu apparaîtra ici...</em>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>📋 Code LaTeX :</strong></label>
+                                <div id="latex-output" class="output-code">Tapez une expression...</div>
+                            </div>
+                        </div>
+
+                        <!-- Code MathML généré -->
+                        <div class="mt-4">
+                            <label class="form-label"><strong>🔧 Code MathML généré :</strong></label>
+                            <div id="mathml-output" class="output-code">Le code MathML apparaîtra ici...</div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-4 text-end">
+                            <button class="btn btn-secondary" onclick="clearEditor()">🗑️ Effacer</button>
+                            <button class="btn btn-info" onclick="copyToClipboard('latex')">📋 Copier LaTeX</button>
+                            <button class="btn btn-success" onclick="copyToClipboard('mathml')">📋 Copier MathML</button>
+                            <button class="btn btn-primary" onclick="convertToCustomNotation()">🔄 Convertir en notation personnalisée</button>
+                        </div>
+
+                        <!-- Notation personnalisée -->
+                        <div class="mt-4">
+                            <label class="form-label"><strong>🎯 Notation personnalisée (pour votre système) :</strong></label>
+                            <div id="custom-notation" class="output-code">La notation personnalisée apparaîtra ici...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://unpkg.com/mathlive/dist/mathlive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let mathField;
+        document.addEventListener('DOMContentLoaded', function() {
+            mathField = document.getElementById('math-field');
+            mathField.addEventListener('input', updatePreview);
+            updatePreview();
+        });
+
+        function insertSymbol(latex) {
+            if (mathField) {
+                mathField.executeCommand('insert', latex);
+                mathField.focus();
+            }
+        }
+        function loadExample(latex) {
+            if (mathField) {
+                mathField.value = latex;
+                updatePreview();
+            }
+        }
+        function clearEditor() {
+            if (mathField) {
+                mathField.value = '';
+                updatePreview();
+            }
+        }
+        function updatePreview() {
+            if (mathField) {
+                // Aperçu rendu
+                document.getElementById('preview').innerHTML = mathField.getValue('latex');
+                // Code LaTeX
+                document.getElementById('latex-output').textContent = mathField.getValue('latex');
+                // Code MathML
+                document.getElementById('mathml-output').textContent = mathField.getValue('math-ml');
+            }
+        }
+        function copyToClipboard(type) {
+            let text = '';
+            if (type === 'latex') text = mathField.getValue('latex');
+            else if (type === 'mathml') text = mathField.getValue('math-ml');
+            if (text) {
+                navigator.clipboard.writeText(text);
+            }
+        }
+        function convertToCustomNotation() {
+            // À adapter selon votre système
+            document.getElementById('custom-notation').textContent = mathField.getValue('latex');
+        }
+    </script>
+</body>
+</html>
