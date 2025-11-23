@@ -4,6 +4,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 import time
+import re
 
 from models import db, Niveau, Chapitre, Question, QuestionsATrous
 from services import QCMService
@@ -31,6 +32,28 @@ app.permanent_session_lifetime = timedelta(days=30)  # Session valide 30 jours
 
 ADMIN_PWD = os.getenv('ADMIN_PWD')
 QCM_ADMIN_PWD = os.getenv('QCM_ADMIN_PWD')
+
+# Fonction utilitaire pour retirer <p> et <br> en début/fin
+def strip_paragraphs(text):
+    if not text:
+        return text
+    text = str(text).strip()
+    # Retirer <p>...</p> encadrant tout
+    text = re.sub(r'^\s*<p[^>]*>(.*)</p>\s*$', r'\1', text, flags=re.DOTALL | re.IGNORECASE)
+    # Retirer balises vides en début/fin
+    text = re.sub(r'^(<p>\s*</p>\s*)+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'(<p>\s*</p>\s*)+$', '', text, flags=re.IGNORECASE)
+    # Retirer <br> en début/fin (boucle pour cas résiduels)
+    prev = None
+    while prev != text:
+        prev = text
+        text = re.sub(r'^(<br\s*/?>\s*)+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'(<br\s*/?>\s*)+$', '', text, flags=re.IGNORECASE)
+    return text.strip()
+
+# Fonction utilitaire pour nettoyer un tableau d'options
+def clean_options(options):
+    return [strip_paragraphs(opt) if opt is not None else '' for opt in options]
 
 # Fonction utilitaire pour les URLs canoniques (SEO)
 def get_canonical_url(endpoint=None, **values):
@@ -258,6 +281,9 @@ def repondre():
     question = questions_niveau[question_num]
 
     reponse_utilisateur = int(request.form.get('reponse', -1))
+    # Validation : s'assurer que la réponse est dans le range 0-3
+    if not (0 <= reponse_utilisateur <= 3):
+        reponse_utilisateur = -1  # Valeur invalide
     est_correcte = reponse_utilisateur == question['reponse_correcte']
 
     # Initialiser le dictionnaire de réponses s'il n'existe pas
@@ -279,8 +305,7 @@ def repondre():
     for i in range(len(questions_niveau)):
         if str(i) in session['reponses_dict']:
             session['reponses'].append(session['reponses_dict'][str(i)])
-        else:
-            break  # Arrêter à la première question non répondue pour les résultats
+        # Supprimer le break pour inclure toutes les réponses, même non consécutives
 
     session['question_courante'] += 1
 
@@ -295,6 +320,14 @@ def resultats():
     score = session['score']
     reponses = session['reponses']
 
+    # Recalculer la correction basée sur les données actuelles de la DB
+    for rep in reponses:
+        rep['correcte'] = rep['reponse_utilisateur'] == rep['question']['reponse_correcte']
+
+    # Recalculer le score
+    score = sum(1 for rep in reponses if rep['correcte'])
+    session['score'] = score
+
     # Déterminer le contexte et le nombre total de questions
     if session.get('mode') == 'chapitre' and 'chapitre' in session:
         chapitre = session['chapitre']
@@ -303,7 +336,8 @@ def resultats():
         contexte = f"{chapitre_info['titre']} ({niveau.upper()})"
         type_test = 'chapitre'
     else:
-        total_questions = len(reponses)
+        questions_niveau = QCMService.get_questions_niveau(niveau)
+        total_questions = len(questions_niveau)
         contexte = f"Niveau {niveau.upper()}"
         type_test = 'niveau'
 
@@ -527,15 +561,15 @@ def admin_api_ajouter_question():
         data = request.get_json()
 
         # Extraire les données du formulaire
-        probleme = data.get('probleme')
-        options = [
+        probleme = strip_paragraphs(data.get('probleme'))
+        options = clean_options([
             data.get('option_a'),
             data.get('option_b'),
             data.get('option_c'),
             data.get('option_d')
-        ]
+        ])
         reponse_correcte = int(data.get('reponse_correcte'))
-        explication = data.get('explication')
+        explication = strip_paragraphs(data.get('explication'))
         difficulte = data.get('difficulte')
         niveau_nom = data.get('niveau')
         chapitre_nom = data.get('chapitre')
@@ -563,6 +597,16 @@ def admin_api_modifier_question(question_id):
     """API pour modifier une question existante"""
     try:
         data = request.get_json()
+
+        # Nettoyer les champs avant mise à jour
+        if 'probleme' in data:
+            data['probleme'] = strip_paragraphs(data.get('probleme'))
+        if 'explication' in data:
+            data['explication'] = strip_paragraphs(data.get('explication'))
+        # Nettoyer options si présentes
+        for k in ['option_a', 'option_b', 'option_c', 'option_d']:
+            if k in data:
+                data[k] = strip_paragraphs(data.get(k))
 
         # Supprimer question_id des données pour éviter la duplication
         data.pop('question_id', None)

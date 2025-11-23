@@ -50,7 +50,7 @@
                 {% endif %}
             </div>
             <div class="card-body">
-                <p class="mb-3"><strong>Problème :</strong> {{ reponse.question.probleme.replace('[TROU]', '...') }}</p>
+                <p class="mb-3"><strong>Problème :</strong> {{ reponse.question.probleme.replace('[TROU]', '...')|mathml_clean }}</p>
                 <div class="row">
                     <div class="col-md-6">
                         <p class="mb-2"><strong>Votre réponse :</strong></p>
@@ -82,13 +82,13 @@
                 {% endif %}
             </div>
             <div class="card-body">
-                <p class="mb-3"><strong>Problème :</strong> {{ reponse.question.probleme }}</p>
+                <p class="mb-3"><strong>Problème :</strong> {{ reponse.question.probleme|mathml_clean }}</p>
 
                 <div class="row">
                     <div class="col-md-6">
                         <p class="mb-2"><strong>Votre réponse :</strong></p>
                         <p class="{% if reponse.correcte %}text-success{% else %}text-danger{% endif %}">
-                            {{ ['A', 'B', 'C', 'D'][reponse.reponse_utilisateur] }}. {{ reponse.question.options[reponse.reponse_utilisateur] }}
+                            {{ ['A', 'B', 'C', 'D'][reponse.reponse_utilisateur] }}. {{ reponse.question.options[reponse.reponse_utilisateur]|mathml_clean }}
                         </p>
                     </div>
 
@@ -96,14 +96,14 @@
                     <div class="col-md-6">
                         <p class="mb-2"><strong>Bonne réponse :</strong></p>
                         <p class="text-success">
-                            {{ ['A', 'B', 'C', 'D'][reponse.question.reponse_correcte] }}. {{ reponse.question.options[reponse.question.reponse_correcte] }}
+                            {{ ['A', 'B', 'C', 'D'][reponse.question.reponse_correcte] }}. {{ reponse.question.options[reponse.question.reponse_correcte]|mathml_clean }}
                         </p>
                     </div>
                     {% endif %}
                 </div>
 
                 <div class="mt-3 p-3 bg-light rounded">
-                    <strong>💡 Explication :</strong> {{ reponse.question.explication }}
+                    <strong>💡 Explication :</strong> {{ reponse.question.explication|mathml_clean }}
                 </div>
             </div>
         </div>

@@ -607,15 +607,29 @@ function chargerQuestion() {
                 setTimeout(() => {
                     if (window.editorInstances['probleme']) {
                         window.editorInstances['probleme'].setData(q.probleme || '');
+                        document.getElementById('probleme').value = q.probleme || '';
                     }
                     if (q.options && q.options.length === 4) {
-                        if (window.editorInstances['option_a']) window.editorInstances['option_a'].setData(q.options[0] || '');
-                        if (window.editorInstances['option_b']) window.editorInstances['option_b'].setData(q.options[1] || '');
-                        if (window.editorInstances['option_c']) window.editorInstances['option_c'].setData(q.options[2] || '');
-                        if (window.editorInstances['option_d']) window.editorInstances['option_d'].setData(q.options[3] || '');
+                        if (window.editorInstances['option_a']) {
+                            window.editorInstances['option_a'].setData(q.options[0] || '');
+                            document.getElementById('option_a').value = q.options[0] || '';
+                        }
+                        if (window.editorInstances['option_b']) {
+                            window.editorInstances['option_b'].setData(q.options[1] || '');
+                            document.getElementById('option_b').value = q.options[1] || '';
+                        }
+                        if (window.editorInstances['option_c']) {
+                            window.editorInstances['option_c'].setData(q.options[2] || '');
+                            document.getElementById('option_c').value = q.options[2] || '';
+                        }
+                        if (window.editorInstances['option_d']) {
+                            window.editorInstances['option_d'].setData(q.options[3] || '');
+                            document.getElementById('option_d').value = q.options[3] || '';
+                        }
                     }
                     if (window.editorInstances['explication']) {
                         window.editorInstances['explication'].setData(q.explication || '');
+                        document.getElementById('explication').value = q.explication || '';
                     }
                 }, 1000);
             }
