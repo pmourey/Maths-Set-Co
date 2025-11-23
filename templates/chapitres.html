@@ -18,11 +18,6 @@
 {% endif %}
 {% endblock %}
 
-{% block og_title %}{% if niveau %}Tests par Chapitre {{ niveau|upper }}{% else %}Tests par Chapitre - Collège{% endif %} | MathπSet🎾&Co{% endblock %}
-{% block og_description %}{% if niveau %}QCM de mathématiques {{ niveau|upper }} organisés par chapitre{% else %}Tests de mathématiques organisés par chapitre pour le collège{% endif %} - Programme officiel avec corrections{% endblock %}
-
-{% block twitter_title %}{% if niveau %}Tests Chapitres {{ niveau|upper }}{% else %}Tests par Chapitre{% endif %} | Maths Collège{% endblock %}
-
 {% block structured_data %}
 <script type="application/ld+json">
 {
@@ -53,6 +48,7 @@
     <div class="card-body text-center p-5">
         <div class="math-icon mb-4">📚</div>
         <h1 class="card-title mb-4">{{ titre_niveau if titre_niveau else 'Tests par Chapitre' }}</h1>
+        <p class="lead mb-4">Trouvez des tests mathématiques pour le collège organisés par chapitre : QCM maths collège, exercices ciblés et corrigés. Ces ressources aident les élèves à réviser efficacement par thématique (fractions, équations, géométrie, etc.).</p>
         <p class="lead mb-4">Choisissez un chapitre spécifique pour vous entraîner</p>
 
         <!-- Section pour les tests en cours correspondant aux chapitres -->
